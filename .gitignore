@@ -22,11 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# документация и всякие файлы
-*.docx
-*.doc
-*.pdf
-*.drawio
-*.svg
-*.txt
