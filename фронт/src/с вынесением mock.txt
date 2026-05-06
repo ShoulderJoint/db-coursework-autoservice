@@ -1,0 +1,617 @@
+import React, { useState } from 'react';
+import './style.css';
+import {
+  NAV_ITEMS,MOCK_USERS,MOCK_CLIENTS,MOCK_CARS, MOCK_APPLICATION, MOCK_SERVICE_STATIONS, MOCK_STATUSES, MOCK_SERVICES,
+  MOCK_STAFF, MOCK_VENDORS, MOCK_WORK_ORDERS, MOCK_SPARE_PARTS_CONTRACTS, MOCK_WORK_ORDER_SERVICES, MOCK_WORK_ORDER_SPARE_PARTS, 
+  MOCK_SPARE_PARTS_CONTRACT_ITEMS
+} from './data/mockData';
+import './components/modals/orderModal';
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Состояние входа
+  const [loginData, setLoginData] = useState({ login: '', password: '' }); // Поля формы
+  const [authError, setAuthError] = useState(''); // Для вывода ошибок
+
+  // Текущий пользователь (изначально пустой)
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Состояние для основных атрибутов ЗН
+  const [orderData, setOrderData] = useState({
+    applicationId: '',
+    advisorId: '',
+    stationId: '',
+    statusId: 1 // По умолчанию "В работе"
+  });
+
+  const getPageTitle = (tab) => {
+    switch (tab) {
+      case 'dashboard':
+        return 'Рабочий стол';
+      case 'work-orders':
+        return 'Список ЗН';
+      case 'applications':
+        return 'Заявки';
+      case 'clients':
+        return 'База клиентов';
+      case 'cars':
+        return 'Автопарк';
+      case 'staff':
+        return 'Персонал';
+      case 'service-stations':
+        return 'Филиалы';
+      case 'service-catalog':
+        return 'Каталог услуг';
+      case 'vendors':
+        return 'Поставщики';
+      case 'contracts':
+        return 'Закупки';
+      default:
+        return 'Система СТО';
+    }
+  };
+
+  const resetOrderForm = () => {
+    // Сброс услуг
+    setSelectedServices([{ rowId: Date.now(), serviceId: '0', price: 0, coeff: 1, count: 1, subtotal: 0 }]);
+
+    // Сброс основных полей
+    setOrderData({
+      applicationId: '',
+      advisorId: '',
+      stationId: '',
+      statusId: 1
+    });
+  };
+
+  // Состояние для строк услуг в новом Заказ-наряде
+  const [selectedServices, setSelectedServices] = useState([
+    { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }
+  ]);
+
+  // Управление вкладками
+  const handleTabClick = (tab) => setActiveTab(tab);
+
+  // Добавление новой строки в модалке
+  const addServiceRow = () => {
+    setSelectedServices([
+      ...selectedServices,
+      { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }
+    ]);
+  };
+
+  // Расчет стоимости в строке
+  const updateRow = (rowId, field, value) => {
+    setSelectedServices(prev => prev.map(row => {
+      if (row.rowId === rowId) {
+        // 1. Создаем копию текущей строки с измененным полем
+        const updated = { ...row, [field]: value };
+
+        // 2. СПЕЦИАЛЬНАЯ ЛОГИКА: если меняем услугу, нужно найти её цену в каталоге
+        if (field === 'serviceId') {
+          const selectedService = MOCK_SERVICES.find(s => s.id === parseInt(value));
+          // Если услуга найдена — берем её цену, если нет — ставим 0
+          updated.price = selectedService ? selectedService.price : 0;
+        }
+
+        // 3. РАСЧЕТ ИТОГА: всегда пересчитываем subtotal по формуле
+        // Используем parseFloat(... || 0), чтобы пустые поля не превращались в NaN (ошибку)
+        const p = parseFloat(updated.price) || 0;
+        const c = parseFloat(updated.coeff) || 0;
+        const cnt = parseFloat(updated.count) || 0;
+
+        updated.subtotal = p * c * cnt;
+
+        return updated;
+      }
+      return row;
+    }));
+  };
+
+  const grandTotal = selectedServices.reduce((sum, row) => sum + row.subtotal, 0);
+  const selectedApp = MOCK_APPLICATION.find(a => a.id === parseInt(orderData.applicationId));
+  const selectedCar = selectedApp ? MOCK_CARS.find(c => c.id === selectedApp.car_id) : null;
+  const selectedOwner = selectedCar ? MOCK_CLIENTS.find(c => c.id === selectedCar.owner_id) : null;
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    const user = MOCK_USERS.find(
+      (u) => u.login === loginData.login && u.password === loginData.password
+    );
+
+    if (user) {
+      setCurrentUser(user);
+      setIsLoggedIn(true);
+      setAuthError('');
+      setActiveTab('dashboard'); // Переход на главную после входа
+    } else {
+      setAuthError('Неверный логин или пароль');
+    }
+  };
+
+  return (
+    <div className="app-container">
+      {!isLoggedIn ? (
+        /* ЭКРАН ВХОДА */
+        <div style={{
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          height: '100vh', width: '100vw', background: '#0f172a', position: 'fixed', top: 0, left: 0, zIndex: 9999
+        }}>
+          <div style={{ background: '#1e293b', padding: '40px', borderRadius: '12px', width: '350px' }}>
+            <h2 style={{ color: '#fff', textAlign: 'center' }}>СТО Система</h2>
+            <form onSubmit={handleLogin} style={{ marginTop: '20px' }}>
+              <div className="form-group">
+                <label style={{ color: '#cbd5e1' }}>Логин</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  style={{ width: '100%', marginBottom: '15px' }}
+                  value={loginData.login}
+                  onChange={(e) => setLoginData({ ...loginData, login: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ color: '#cbd5e1' }}>Пароль</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  style={{ width: '100%', marginBottom: '15px' }}
+                  value={loginData.password}
+                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                />
+              </div>
+              {authError && <p style={{ color: '#ef4444', fontSize: '13px' }}>{authError}</p>}
+              <button type="submit" className="btn-primary" style={{ width: '100%' }}>Войти</button>
+            </form>
+          </div>
+        </div>
+      ) : (
+        /* ОСНОВНОЙ ИНТЕРФЕЙС (Твой текущий код) */
+        <>
+          <nav className="sidebar">
+            <div className="sidebar-header" style={{ padding: '20px 0' }}>
+              <span className="logo-text">СТО Система</span>
+              <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '10px' }}>
+                Вы вошли как: <br /><strong>{currentUser?.name}</strong>
+              </div>
+              <button
+                onClick={() => setIsLoggedIn(false)}
+                style={{ marginTop: '10px', fontSize: '10px', padding: '4px' }}
+              >Выйти</button>
+            </div>
+
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {NAV_ITEMS
+                .filter(item => item.roles.includes(currentUser.role))
+                .map(item => (
+                  <li
+                    key={item.id}
+                    className={activeTab === item.id ? 'active' : ''}
+                    onClick={() => setActiveTab(item.id)}
+                    style={{ padding: '12px 20px', cursor: 'pointer' }}
+                  >
+                    {item.label}
+                  </li>
+                ))
+              }
+            </ul>
+          </nav>
+
+          <main className="content">
+            <header className="content-header">
+              <h1>{NAV_ITEMS.find(i => i.id === activeTab)?.label || 'Система'}</h1>
+              <div className="header-actions">
+
+                {activeTab === 'work-orders' && currentUser.role === 'advisor' && (
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      resetOrderForm();
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    + Создать ЗН
+                  </button>
+                )}
+              </div>
+            </header>
+
+            <section id="view-container">
+              {activeTab === 'dashboard' && (
+                <div className="dashboard-grid">
+                  <div className="dashboard-card">
+                    <h3>Профиль: {currentUser.name}</h3>
+                    <p>Статус: Постоянный клиент</p>
+                  </div>
+
+                  {currentUser.role === 'client' && (
+                    <>
+                      <div className="dashboard-card highlight">
+                        <h3>В работе</h3>
+                        {/* Считаем ЗН со статусом "В работе" для этого клиента */}
+                        <div className="big-number">2 автомобиля</div>
+                      </div>
+                      <div className="dashboard-card">
+                        <h3>Ваши бонусы</h3>
+                        <p>500 баллов</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'work-orders' && (
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th><th>ID заявки</th><th>Мастер-приёмщик</th><th>Филиал</th><th>Статус</th><th>Итоговая цена комплектующих</th>
+                      <th>Итоговая цена услуг</th><th>К оплате</th><th>Дата закрытия ЗН</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_WORK_ORDERS.filter(order => {
+                      // Если залогинен клиент — показываем только его заказы
+                      if (currentUser.role === 'client') {
+                        const app = MOCK_APPLICATION.find(a => a.id === order.application_id);
+                        const car = MOCK_CARS.find(c => c.id === app?.car_id);
+                        return car?.owner_id === currentUser.id;
+                      }
+                      return true; // Остальные роли видят всё
+                    }).map(order => {
+                      // 1. Считаем запчасти
+                      const partsTotal = MOCK_WORK_ORDER_SPARE_PARTS
+                        .filter(p => p.work_order_id === order.id)
+                        .reduce((sum, p) => sum + (p.applied_price * p.count), 0);
+
+                      // 2. Считаем услуги
+                      const servicesTotal = MOCK_WORK_ORDER_SERVICES
+                        .filter(s => s.work_order_id === order.id)
+                        .reduce((sum, s) => sum + (s.applied_price * s.count * s.coeff), 0);
+
+                      // 3. Находим мастера и филиал для отображения имен, а не ID
+                      const advisor = MOCK_STAFF.find(s => s.id === order.service_advisor_id);
+                      const station = MOCK_SERVICE_STATIONS.find(st => st.id === order.service_station_id);
+                      const status = MOCK_STATUSES.find(s => s.id === order.status_id);
+
+                      return (
+                        <tr key={order.id}>
+                          <td>ЗН-{order.id}</td>
+                          <td>№{order.application_id}</td>
+                          <td>{advisor ? `${advisor.surname} ${advisor.name[0]}.` : '—'}</td>
+                          <td>{station ? station.city : '—'}</td>
+                          <td>
+                            <span className={`status-badge status-${order.status_id}`}>
+                              {status?.name}
+                            </span>
+                          </td>
+                          <td>{partsTotal.toLocaleString()} руб.</td>
+                          <td>{servicesTotal.toLocaleString()} руб.</td>
+                          <td><strong>{(partsTotal + servicesTotal).toLocaleString()} руб.</strong></td>
+                          <td>{order.close_date || '—'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+
+              {activeTab === 'clients' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Телефон</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_CLIENTS.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.surname}</td>
+                        <td>{c.name}</td>
+                        <td>{c.patronymic}</td>
+                        <td>{c.phone}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {activeTab === 'cars' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Владелец</th><th>Марка</th><th>Модель</th><th>Год выпуска</th><th>VIN</th><th>Гос. номер</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_CARS
+                      .filter(car => currentUser.role === 'client' ? car.owner_id === currentUser.id : true)
+                      .map(car => (
+                        <tr key={car.id}>
+                          <td>{car.owner_id}</td>
+                          <td>{car.brand}</td>
+                          <td>{car.model}</td>
+                          <td>{car.production_year}</td>
+                          <td>{car.vin}</td>
+                          <td>{car.license_plate}</td>
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                </table>
+              )}
+
+              {activeTab === 'applications' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Машина</th><th>Администратор, оформивший заявку</th><th>Описание проблем</th><th>Дата регистрации</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_APPLICATION.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.car_id}</td>
+                        <td>{c.administrator_id}</td>
+                        <td>{c.troubles_description}</td>
+                        <td>{c.registration_date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {activeTab === 'staff' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Филиал</th><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Должность</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_STAFF.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.service_station_id}</td>
+                        <td>{c.surname}</td>
+                        <td>{c.name}</td>
+                        <td>{c.patronymic}</td>
+                        <td>{c.role}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {activeTab === 'service-stations' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Регион</th><th>Город</th><th>Улица</th><th>дом</th><th>Телефон</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_SERVICE_STATIONS.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.region}</td>
+                        <td>{c.city}</td>
+                        <td>{c.street}</td>
+                        <td>{c.house}</td>
+                        <td>{c.phone_number}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {activeTab === 'service-catalog' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Название</th><th>Цена</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_SERVICES.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.name}</td>
+                        <td>{c.price}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {activeTab === 'vendors' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Регион</th><th>Город</th><th>Улица</th><th>Дом</th><th>Номер офиса/квартиры</th><th>Почтовый индекс</th>
+                      <th>ИНН</th><th>Телефон</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_VENDORS.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.region}</td>
+                        <td>{c.city}</td>
+                        <td>{c.street}</td>
+                        <td>{c.house}</td>
+                        <td>{c.office_flat}</td>
+                        <td>{c.postcode}</td>
+                        <td>{c.TIN}</td>
+                        <td>{c.phone_number}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+              {activeTab === 'contracts' && (
+                <table className="data-table">
+                  <thead>
+                    <tr><th>Поставщик</th><th>Дата</th><th>Итоговая цена</th></tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_SPARE_PARTS_CONTRACTS.map(c => (
+                      <tr key={c.id}>
+                        <td>{c.vendor_id}</td>
+                        <td>{c.date}</td>
+                        <td>{c.total_price}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </section>
+          </main>
+
+          {isModalOpen && (
+            <div className="modal" style={{ display: 'flex' }}>
+              <div className="modal-content" style={{ maxWidth: '800px', width: '100%' }}>
+                <h2>Новый заказ-наряд</h2>
+                <form onSubmit={(e) => e.preventDefault()}>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    {/* ЛЕВАЯ КОЛОНКА: Ссылочные данные */}
+                    <div className="form-column">
+                      <div className="form-group">
+                        <label>Основание (Заявка):</label>
+                        <select
+                          value={orderData.applicationId}
+                          onChange={(e) => setOrderData({ ...orderData, applicationId: e.target.value })}
+                        >
+                          <option value="">Выберите активную заявку...</option>
+                          {MOCK_APPLICATION.map(app => (
+                            <option key={app.id} value={app.id}>
+                              Заявка №{app.id} ({app.troubles_description.substring(0, 30)}...)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Клиент (из заявки):</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={selectedOwner ? `${selectedOwner.surname} ${selectedOwner.name}` : 'Выберите заявку'}
+                          style={{ backgroundColor: '#f8fafc' }}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Автомобиль:</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={selectedCar ? `${selectedCar.brand} ${selectedCar.model} (${selectedCar.license_plate})` : 'Выберите заявку'}
+                          style={{ backgroundColor: '#f8fafc' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* ПРАВАЯ КОЛОНКА: Ответственные */}
+                    <div className="form-column">
+                      <div className="form-group">
+                        <label>Филиал исполнения:</label>
+                        <select
+                          value={orderData.stationId}
+                          onChange={(e) => setOrderData({ ...orderData, stationId: e.target.value })}
+                        >
+                          <option value="">Выберите филиал...</option>
+                          {MOCK_SERVICE_STATIONS.map(st => (
+                            <option key={st.id} value={st.id}>{st.city}, {st.street}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Мастер-приёмщик:</label>
+                        <select
+                          value={orderData.advisorId}
+                          onChange={(e) => setOrderData({ ...orderData, advisorId: e.target.value })}
+                        >
+                          <option value="">Выберите мастера...</option>
+                          {/* Фильтруем персонал, чтобы были только приемщики */}
+                          {MOCK_STAFF.filter(s => s.role === 'Мастер-приемщик').map(staff => (
+                            <option key={staff.id} value={staff.id}>{staff.surname} {staff.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Текущий статус:</label>
+                        <select
+                          value={orderData.statusId}
+                          onChange={(e) => setOrderData({ ...orderData, statusId: e.target.value })}
+                        >
+                          {MOCK_STATUSES.map(stat => (
+                            <option key={stat.id} value={stat.id}>{stat.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  <h3>Услуги и коэффициенты</h3>
+                  <div className="services-container">
+                    {selectedServices.map((row) => (
+                      <div
+                        key={row.rowId}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '2fr 100px 70px 70px 120px', // Жесткие пропорции колонок
+                          gap: '10px',
+                          marginBottom: '10px',
+                          width: '100%'
+                        }}
+                      >
+                        <select
+                          style={{ width: '100%' }} // Важно: заставляем элемент занять всю колонку
+                          value={row.serviceId}
+                          onChange={(e) => updateRow(row.rowId, 'serviceId', e.target.value)}
+                        >
+                          <option value="0">Выберите услугу...</option>
+                          {MOCK_SERVICES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+
+                        <input
+                          style={{ width: '100%' }}
+                          type="number"
+                          value={row.price}
+                          readOnly
+                          placeholder="Цена"
+                        />
+
+                        <input
+                          style={{ width: '100%' }}
+                          type="number"
+                          step="0.1"
+                          value={row.coeff}
+                          onChange={(e) => updateRow(row.rowId, 'coeff', parseFloat(e.target.value) || 0)}
+                          placeholder="Коэфф."
+                        />
+
+                        <input
+                          style={{ width: '100%' }}
+                          type="number"
+                          step="1"
+                          value={row.count}
+                          onChange={(e) => updateRow(row.rowId, 'count', parseFloat(e.target.value) || 0)}
+                          placeholder="Количество"
+                        />
+
+                        <input
+                          style={{ width: '100%', backgroundColor: '#f1f5f9' }} // Выделим цветом readonly поле
+                          type="number"
+                          value={row.subtotal.toFixed(2)}
+                          readOnly
+                          placeholder="Итого"
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <button type="button" className="btn-secondary" onClick={addServiceRow}>+ Добавить услугу</button>
+
+                  <div className="total-section" style={{ marginTop: '20px', fontSize: '1.2rem' }}>
+                    <strong>Всего к оплате: {grandTotal.toFixed(2)} руб.</strong>
+                  </div>
+
+                  <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                    <button type="button" className="btn-text" onClick={() => { setIsModalOpen(false); resetOrderForm(); }}>Отмена</button>
+                    <button type="submit" className="btn-primary" onClick={() => setIsModalOpen(false)}>Сохранить ЗН</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+export default App;

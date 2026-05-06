@@ -1,0 +1,637 @@
+import React, { useState } from 'react';
+import './style.css';
+
+
+// Имитация данных (позже заменим на запросы к Node.js + PostgreSQL)
+
+const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Рабочий стол', roles: ['root', 'admin', 'advisor', 'client'] },
+  { id: 'work-orders', label: 'Заказ-наряды', roles: ['root', 'admin', 'advisor', 'client'] },
+  { id: 'applications', label: 'Заявки', roles: ['root', 'admin', 'advisor', 'client'] },
+  { id: 'clients', label: 'База клиентов', roles: ['root', 'admin', 'advisor'] },
+  { id: 'cars', label: 'Автопарк', roles: ['root', 'admin', 'advisor'] },
+  { id: 'staff', label: 'Персонал', roles: ['root', 'admin'] },
+  { id: 'service-stations', label: 'Филиалы', roles: ['root'] },
+  { id: 'service-catalog', label: 'Каталог услуг', roles: ['root', 'admin', 'advisor'] },
+  { id: 'vendors', label: 'Поставщики', roles: ['root', 'admin'] },
+];
+
+const MOCK_USERS = [
+  { login: 'root', password: '123', role: 'root', name: 'Главный Админ' },
+  { login: 'admin', password: '123', role: 'admin', name: 'Админ СТО Самара' },
+  { login: 'master', password: '123', role: 'advisor', name: 'Иванов Иван' },
+  { login: 'user', password: '123', role: 'client', name: 'Шумахер Михаил' },
+];
+
+const MOCK_CLIENTS = [
+  { id: 1, surname: "Шумахер", name: "Михаэль", patronymic: "Рольфович", phone: "+79771234567" },
+  { id: 2, surname: "Ферстаппен", name: "Макс", patronymic: "Йосович", phone: "+79123456700" },
+  { id: 3, surname: "Хэмилтон", name: "Льюис", patronymic: null, phone: "+79864456712" },
+  { id: 4, surname: "Сенна", name: "Айртон", patronymic: "Милтонович", phone: null },
+  { id: 5, surname: "Лауда", name: "Николаус", patronymic: "Петрович", phone: null },
+  { id: 6, surname: "Антонелли", name: "Кими", patronymic: "Маркович", phone: "+79823579235" }
+];
+
+const MOCK_CARS = [
+  { id: 1, owner_id: 1, brand: "Mercedes-Benz", model: "W124", production_year: 1987, vin: "WDB1240201A123456", license_plate: "А777МР 77" },
+  { id: 2, owner_id: 1, brand: "Renault", model: "Logan", production_year: 2012, vin: "X7LLSRGALH1234567", license_plate: "К123ОТ 150" },
+  { id: 3, owner_id: 2, brand: "Lada", model: "Vesta", production_year: 2021, vin: "XTA218000M1234567", license_plate: "Е555КХ 197" },
+  { id: 4, owner_id: 3, brand: "Lada", model: "Kalina", production_year: 2014, vin: "XTA111760E1234567", license_plate: "М890УЕ 750" },
+  { id: 5, owner_id: 6, brand: "Nissan", model: "Qashqai (J10)", production_year: 2010, vin: "SJNFAAJ10U1234567", license_plate: "В444СС 799" },
+  { id: 6, owner_id: 5, brand: "Lada", model: "Priora", production_year: 2015, vin: "XTA217030F1234567", license_plate: "Н001НН 05" },
+  { id: 7, owner_id: 4, brand: "Tank", model: "300", production_year: 2023, vin: "X96TANK300P123456", license_plate: "Р111АА 777" },
+  { id: 8, owner_id: 4, brand: "Tank", model: "300", production_year: 2024, vin: "X96TANK300R123456", license_plate: "С222ВВ 777" },
+  { id: 9, owner_id: 1, brand: "Changan", model: "Alsvin", production_year: 2023, vin: "LSYC11E40P1234567", license_plate: "Х321КМ 790" },
+  { id: 10, owner_id: 3, brand: "Haval", model: "Jolion", production_year: 2022, vin: "X9FCH4A12N1234567", license_plate: "Т999ММ 199" },
+  { id: 11, owner_id: 6, brand: "Toyota", model: "Mark II (JZX100)", production_year: 1999, vin: "JZX100-6012345", license_plate: "К888ОК 125" }
+];
+
+const MOCK_APPLICATION = [
+  { id: 1, car_id: 4, administrator_id: 3, troubles_description: "Нужно заменить моторное масло и заправить кондиционер", registration_date: "24.04.2026" },
+  { id: 2, car_id: 3, administrator_id: 6, troubles_description: "Шум и скрип в подвеске", registration_date: "10.02.2020" },
+  { id: 3, car_id: 7, administrator_id: 7, troubles_description: "Повышенный расход масла и топлива", registration_date: "11.05.2022" },
+  { id: 4, car_id: 11, administrator_id: 6, troubles_description: "Горит check engine", registration_date: "07.11.2019" },
+  { id: 5, car_id: 2, administrator_id: 7, troubles_description: "Поменять шины на передних колёсах", registration_date: "08.11.2025" },
+  { id: 6, car_id: 3, administrator_id: 3, troubles_description: "Замена воздушных и салонных фильтров", registration_date: "01.09.2023" },
+];
+
+const MOCK_SERVICE_STATIONS = [
+  { id: 1, region: "Самарская область", city: "Самара", street: "Академика Павлова", house: "1", phone_number: "+74950001122" },
+  { id: 2, region: "Самарская область", city: "Тольятти", street: "Комсомольская", house: "44", phone_number: "+74950003344" }
+];
+
+const MOCK_STATUSES = [
+  { id: 1, name: "В работе", description: "Только что был создан Заказ-наряд" },
+  { id: 2, name: "Завершен", description: "Работы выполнены, автомобиль выдан" },
+  { id: 3, name: "Отменен", description: "Заказ-наряд отменён по требованию клиента" }
+];
+
+const MOCK_SERVICES = [
+  { id: 1, name: "Замена масла", price: 1000 },
+  { id: 2, name: "Диагностика ходовой", price: 1500 },
+  { id: 3, name: "Шиномонтаж", price: 2000 },
+  { id: 4, name: "Развал-схождение", price: 2500 }
+];
+
+const MOCK_STAFF = [
+  { id: 1, service_station_id: 1, surname: "Иванов", name: "Иван", patronymic: "Иванович", role: "Мастер-приемщик" },
+  { id: 2, service_station_id: 1, surname: "Петров", name: "Петр", patronymic: null, role: "Механик" },
+  { id: 3, service_station_id: 1, surname: "Сидоров", name: "Сидор", patronymic: "Сидорович", role: "Администратор" },
+  { id: 4, service_station_id: 2, surname: "Шишкина", name: "Евгения", patronymic: "Олеговна", role: "Механик" },
+  { id: 5, service_station_id: 2, surname: "Литин", name: "Кирилл", patronymic: "Артёмович", role: "Механик" },
+  { id: 6, service_station_id: 2, surname: "Ленин", name: "Петр", patronymic: null, role: "Администратор" },
+  { id: 7, service_station_id: 1, surname: "Лобанов", name: "Сергей", patronymic: "Петрович", role: "Администратор" },
+  { id: 8, service_station_id: 2, surname: "Быкова", name: "Валерия", patronymic: "Петровна", role: "Мастер-приемщик" }
+];
+
+const MOCK_VENDORS = [
+  { id: 1, name: "АвтоМир Запчасти", region: "Московская область", city: "Москва", street: "Южнопортовая", house: "7", office_flat: "оф 12", postcode: "115114", TIN: "7712345678", phone_number: "+74951112233" },
+  { id: 2, name: "АвтоВселенная Запчасти", region: "Ленинградская область", city: "Санкт-Петербург", street: "Невский проспект", house: "13/37", office_flat: null, postcode: "191023", TIN: "7787654321", phone_number: "+74828889521" }
+];
+
+const MOCK_WORK_ORDERS = [
+  { id: 1, application_id: 1, service_advisor_id: 1, status_id: 1, service_station_id: 1, close_date: null },
+  { id: 2, application_id: 2, service_advisor_id: 8, status_id: 1, service_station_id: 2, close_date: null },
+  { id: 3, application_id: 4, service_advisor_id: 8, status_id: 2, service_station_id: 2, close_date: "10.11.2019" },
+  { id: 4, application_id: 5, service_advisor_id: 1, status_id: 3, service_station_id: 1, close_date: "09.11.2025" },
+];
+
+const MOCK_SPARE_PARTS_CONTRACTS = [
+  { id: 1, vendor_id: 1, date: "15.03.2026", total_price: 15200 },
+  { id: 2, vendor_id: 2, date: "10.04.2024", total_price: 45000 },
+  { id: 3, vendor_id: 1, date: "11.11.2025", total_price: 8900 }
+];
+
+//промежуточные
+const MOCK_WORK_ORDER_SERVICES = [
+  { id: 1, work_order_id: 1, service_id: 1, count: 1, applied_price: 1000 }, // ЗН-1: Замена масла
+  { id: 2, work_order_id: 1, service_id: 2, count: 1, applied_price: 1500 }, // ЗН-1: Диагностика ходовой
+  { id: 3, work_order_id: 2, service_id: 2, count: 1, applied_price: 1500 }, // ЗН-2: Диагностика ходовой
+  { id: 4, work_order_id: 3, service_id: 4, count: 1, applied_price: 2500 }, // ЗН-3: Развал-схождение
+  { id: 5, work_order_id: 4, service_id: 3, count: 4, applied_price: 2000 }  // ЗН-4: Шиномонтаж (4 колеса)
+];//нужно внести коэффициенты
+
+const MOCK_WORK_ORDER_SPARE_PARTS = [
+  { id: 1, work_order_id: 1, spare_part_id: 101, count: 1, applied_price: 850 },  // Фильтр масляный для Калины
+  { id: 2, work_order_id: 1, spare_part_id: 102, count: 4, applied_price: 3200 }, // Масло синтетика (4л)
+  { id: 3, work_order_id: 2, spare_part_id: 103, count: 2, applied_price: 4500 }, // Рычаги передние для Весты
+  { id: 4, work_order_id: 3, spare_part_id: 104, count: 2, applied_price: 1200 }, // Тяги рулевые для Mark II
+];
+
+const MOCK_SPARE_PARTS_CONTRACT_ITEMS = [
+  { id: 1, contract_id: 1, name: "Фильтр масляный Mann", count: 10 },
+  { id: 2, contract_id: 1, name: "Фильтр воздушный", count: 5 },
+  { id: 3, contract_id: 2, name: "Комплект ГРМ Vesta", count: 3 },
+  { id: 4, contract_id: 2, name: "Стойки амортизатора", count: 4 },
+  { id: 5, contract_id: 2, name: "Тормозные диски Brembo", count: 2 },
+  { id: 6, contract_id: 3, name: "Жидкость ГУР 1л", count: 6 },
+  { id: 7, contract_id: 3, name: "Свечи зажигания NGK", count: 20 }
+];
+
+
+function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Состояние для основных атрибутов ЗН
+  const [orderData, setOrderData] = useState({
+    applicationId: '',
+    advisorId: '',
+    stationId: '',
+    statusId: 1 // По умолчанию "В работе"
+  });
+  const [currentUser, setCurrentUser] = useState({
+    id: 1,
+    name: 'Администратор',
+    role: 'root' // варианты: 'root', 'admin', 'advisor', 'client'
+  });
+
+  const getPageTitle = (tab) => {
+    switch (tab) {
+      case 'dashboard':
+        return 'Рабочий стол';
+      case 'work-orders':
+        return 'Список ЗН';
+      case 'applications':
+        return 'Заявки';
+      case 'clients':
+        return 'База клиентов';
+      case 'cars':
+        return 'Автопарк';
+      case 'staff':
+        return 'Персонал';
+      case 'service-stations':
+        return 'Филиалы';
+      case 'service-catalog':
+        return 'Каталог услуг';
+      case 'vendors':
+        return 'Поставщики';
+      case 'contracts':
+        return 'Закупки';
+      default:
+        return 'Система СТО';
+    }
+  };
+
+  const resetOrderForm = () => {
+    // Сброс услуг
+    setSelectedServices([{ rowId: Date.now(), serviceId: '0', price: 0, coeff: 1, count: 1, subtotal: 0 }]);
+
+    // Сброс основных полей
+    setOrderData({
+      applicationId: '',
+      advisorId: '',
+      stationId: '',
+      statusId: 1
+    });
+  };
+
+  // Состояние для строк услуг в новом Заказ-наряде
+  const [selectedServices, setSelectedServices] = useState([
+    { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }
+  ]);
+
+  // Управление вкладками
+  const handleTabClick = (tab) => setActiveTab(tab);
+
+  // Добавление новой строки в модалке
+  const addServiceRow = () => {
+    setSelectedServices([
+      ...selectedServices,
+      { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }
+    ]);
+  };
+
+  // Расчет стоимости в строке
+  const updateRow = (rowId, field, value) => {
+    setSelectedServices(prev => prev.map(row => {
+      if (row.rowId === rowId) {
+        // 1. Создаем копию текущей строки с измененным полем
+        const updated = { ...row, [field]: value };
+
+        // 2. СПЕЦИАЛЬНАЯ ЛОГИКА: если меняем услугу, нужно найти её цену в каталоге
+        if (field === 'serviceId') {
+          const selectedService = MOCK_SERVICES.find(s => s.id === parseInt(value));
+          // Если услуга найдена — берем её цену, если нет — ставим 0
+          updated.price = selectedService ? selectedService.price : 0;
+        }
+
+        // 3. РАСЧЕТ ИТОГА: всегда пересчитываем subtotal по формуле
+        // Используем parseFloat(... || 0), чтобы пустые поля не превращались в NaN (ошибку)
+        const p = parseFloat(updated.price) || 0;
+        const c = parseFloat(updated.coeff) || 0;
+        const cnt = parseFloat(updated.count) || 0;
+
+        updated.subtotal = p * c * cnt;
+
+        return updated;
+      }
+      return row;
+    }));
+  };
+
+  const grandTotal = selectedServices.reduce((sum, row) => sum + row.subtotal, 0);
+  const selectedApp = MOCK_APPLICATION.find(a => a.id === parseInt(orderData.applicationId));
+  const selectedCar = selectedApp ? MOCK_CARS.find(c => c.id === selectedApp.car_id) : null;
+  const selectedOwner = selectedCar ? MOCK_CLIENTS.find(c => c.id === selectedCar.owner_id) : null;
+
+  return (
+    <div className="app-container">
+      {/* SIDEBAR */}
+      <nav className="sidebar">
+        <div className="sidebar-header" style={{ padding: '20px 0' }}>
+          <span className="logo-text">СТО Система</span>
+
+          {/* Панель переключения ролей (только для тестов) */}
+          <div style={{ marginTop: '15px', padding: '10px', background: '#1e293b', borderRadius: '8px' }}>
+            <label style={{ fontSize: '10px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>
+              ТЕСТ РОЛИ:
+            </label>
+            <select
+              value={currentUser.role}
+              onChange={(e) => {
+                setCurrentUser({ ...currentUser, role: e.target.value });
+                setActiveTab('dashboard');
+              }}
+              style={{ width: '100%', fontSize: '12px', padding: '5px', borderRadius: '4px', cursor: 'pointer' }}
+            >
+              <option value="root">Root (Полный доступ)</option>
+              <option value="admin">Админ СТО</option>
+              <option value="advisor">Мастер-приёмщик</option>
+              <option value="client">Клиент</option>
+            </select>
+          </div>
+        </div>
+
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {NAV_ITEMS
+            .filter(item => item.roles.includes(currentUser.role))
+            .map(item => (
+              <li
+                key={item.id}
+                className={activeTab === item.id ? 'active' : ''}
+                onClick={() => setActiveTab(item.id)}
+                style={{ padding: '12px 20px', cursor: 'pointer' }}
+              >
+                {item.label}
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      {/* MAIN CONTENT */}
+      <main className="content">
+        <header className="content-header">
+          {/* Находим название текущей вкладки в массиве NAV_ITEMS */}
+          <h1>{NAV_ITEMS.find(i => i.id === activeTab)?.label || 'Система'}</h1>
+
+          <div className="header-actions">
+            {/* Кнопка создания ЗН: видна только в ЗН и только для персонала */}
+            {activeTab === 'work-orders' && currentUser.role !== 'client' && (
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  resetOrderForm();         // Очищаем форму (услуги + заявку)
+                  setIsModalOpen(true); // Открываем модалку
+                }}
+              >
+                + Создать ЗН
+              </button>
+            )}
+          </div>
+        </header>
+
+        <section id="view-container">
+          {activeTab === 'dashboard' && (
+            <div className="dashboard-card">
+              <h3>Статистика за день</h3>
+              <p>В работе заказов: 1</p>
+            </div>
+          )}
+
+          {activeTab === 'work-orders' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>ID</th><th>ID заявки</th><th>Мастер-приёмщик</th><th>Филиал</th><th>Статус</th><th>Итоговая цена комплектующих</th>
+                  <th>Итоговая цена услуг</th><th>К оплате</th><th>Дата закрытия ЗН</th></tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          )}
+
+          {activeTab === 'clients' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Телефон</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_CLIENTS.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.surname}</td>
+                    <td>{c.name}</td>
+                    <td>{c.patronymic}</td>
+                    <td>{c.phone}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {activeTab === 'cars' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Владелец</th><th>Марка</th><th>Модель</th><th>Год выпуска</th><th>VIN</th><th>Гос. номер</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_CARS.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.owner_id}</td>
+                    <td>{c.brand}</td>
+                    <td>{c.model}</td>
+                    <td>{c.production_year}</td>
+                    <td>{c.vin}</td>
+                    <td>{c.license_plate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          {activeTab === 'applications' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Машина</th><th>Администратор, оформивший заявку</th><th>Описание проблем</th><th>Дата регистрации</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_APPLICATION.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.car_id}</td>
+                    <td>{c.administrator_id}</td>
+                    <td>{c.troubles_description}</td>
+                    <td>{c.registration_date}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === 'staff' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Филиал</th><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Должность</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_STAFF.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.service_station_id}</td>
+                    <td>{c.surname}</td>
+                    <td>{c.name}</td>
+                    <td>{c.patronymic}</td>
+                    <td>{c.role}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === 'service-stations' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Регион</th><th>Город</th><th>Улица</th><th>дом</th><th>Телефон</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_SERVICE_STATIONS.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.region}</td>
+                    <td>{c.city}</td>
+                    <td>{c.street}</td>
+                    <td>{c.house}</td>
+                    <td>{c.phone_number}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === 'service-catalog' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Название</th><th>Цена</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_SERVICES.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.name}</td>
+                    <td>{c.price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === 'vendors' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Регион</th><th>Город</th><th>Улица</th><th>Дом</th><th>Номер офиса/квартиры</th><th>Почтовый индекс</th>
+                  <th>ИНН</th><th>Телефон</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_VENDORS.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.region}</td>
+                    <td>{c.city}</td>
+                    <td>{c.street}</td>
+                    <td>{c.house}</td>
+                    <td>{c.office_flat}</td>
+                    <td>{c.postcode}</td>
+                    <td>{c.TIN}</td>
+                    <td>{c.phone_number}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === 'contracts' && (
+            <table className="data-table">
+              <thead>
+                <tr><th>Поставщик</th><th>Дата</th><th>Итоговая цена</th></tr>
+              </thead>
+              <tbody>
+                {MOCK_SPARE_PARTS_CONTRACTS.map(c => (
+                  <tr key={c.id}>
+                    <td>{c.vendor_id}</td>
+                    <td>{c.date}</td>
+                    <td>{c.total_price}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </main>
+
+      {/* MODAL WINDOW */}
+      {isModalOpen && (
+        <div className="modal" style={{ display: 'flex' }}>
+          <div className="modal-content" style={{ maxWidth: '800px', width: '100%' }}>
+            <h2>Новый заказ-наряд</h2>
+            <form onSubmit={(e) => e.preventDefault()}>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                {/* ЛЕВАЯ КОЛОНКА: Ссылочные данные */}
+                <div className="form-column">
+                  <div className="form-group">
+                    <label>Основание (Заявка):</label>
+                    <select
+                      value={orderData.applicationId}
+                      onChange={(e) => setOrderData({ ...orderData, applicationId: e.target.value })}
+                    >
+                      <option value="">Выберите активную заявку...</option>
+                      {MOCK_APPLICATION.map(app => (
+                        <option key={app.id} value={app.id}>
+                          Заявка №{app.id} ({app.troubles_description.substring(0, 30)}...)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Клиент (из заявки):</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={selectedOwner ? `${selectedOwner.surname} ${selectedOwner.name}` : 'Выберите заявку'}
+                      style={{ backgroundColor: '#f8fafc' }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Автомобиль:</label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={selectedCar ? `${selectedCar.brand} ${selectedCar.model} (${selectedCar.license_plate})` : 'Выберите заявку'}
+                      style={{ backgroundColor: '#f8fafc' }}
+                    />
+                  </div>
+                </div>
+
+                {/* ПРАВАЯ КОЛОНКА: Ответственные */}
+                <div className="form-column">
+                  <div className="form-group">
+                    <label>Филиал исполнения:</label>
+                    <select
+                      value={orderData.stationId}
+                      onChange={(e) => setOrderData({ ...orderData, stationId: e.target.value })}
+                    >
+                      <option value="">Выберите филиал...</option>
+                      {MOCK_SERVICE_STATIONS.map(st => (
+                        <option key={st.id} value={st.id}>{st.city}, {st.street}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Мастер-приёмщик:</label>
+                    <select
+                      value={orderData.advisorId}
+                      onChange={(e) => setOrderData({ ...orderData, advisorId: e.target.value })}
+                    >
+                      <option value="">Выберите мастера...</option>
+                      {/* Фильтруем персонал, чтобы были только приемщики */}
+                      {MOCK_STAFF.filter(s => s.role === 'Мастер-приемщик').map(staff => (
+                        <option key={staff.id} value={staff.id}>{staff.surname} {staff.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Текущий статус:</label>
+                    <select
+                      value={orderData.statusId}
+                      onChange={(e) => setOrderData({ ...orderData, statusId: e.target.value })}
+                    >
+                      {MOCK_STATUSES.map(stat => (
+                        <option key={stat.id} value={stat.id}>{stat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+
+              <h3>Услуги и коэффициенты</h3>
+              <div className="services-container">
+                {selectedServices.map((row) => (
+                  <div
+                    key={row.rowId}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '2fr 100px 70px 70px 120px', // Жесткие пропорции колонок
+                      gap: '10px',
+                      marginBottom: '10px',
+                      width: '100%'
+                    }}
+                  >
+                    <select
+                      style={{ width: '100%' }} // Важно: заставляем элемент занять всю колонку
+                      value={row.serviceId}
+                      onChange={(e) => updateRow(row.rowId, 'serviceId', e.target.value)}
+                    >
+                      <option value="0">Выберите услугу...</option>
+                      {MOCK_SERVICES.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+
+                    <input
+                      style={{ width: '100%' }}
+                      type="number"
+                      value={row.price}
+                      readOnly
+                      placeholder="Цена"
+                    />
+
+                    <input
+                      style={{ width: '100%' }}
+                      type="number"
+                      step="0.1"
+                      value={row.coeff}
+                      onChange={(e) => updateRow(row.rowId, 'coeff', parseFloat(e.target.value) || 0)}
+                      placeholder="Коэфф."
+                    />
+
+                    <input
+                      style={{ width: '100%' }}
+                      type="number"
+                      step="1"
+                      value={row.count}
+                      onChange={(e) => updateRow(row.rowId, 'count', parseFloat(e.target.value) || 0)}
+                      placeholder="Количество"
+                    />
+
+                    <input
+                      style={{ width: '100%', backgroundColor: '#f1f5f9' }} // Выделим цветом readonly поле
+                      type="number"
+                      value={row.subtotal.toFixed(2)}
+                      readOnly
+                      placeholder="Итого"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <button type="button" className="btn-secondary" onClick={addServiceRow}>+ Добавить услугу</button>
+
+              <div className="total-section" style={{ marginTop: '20px', fontSize: '1.2rem' }}>
+                <strong>Всего к оплате: {grandTotal.toFixed(2)} руб.</strong>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button type="button" className="btn-text" onClick={() => { setIsModalOpen(false); resetOrderForm(); }}>Отмена</button>
+                <button type="submit" className="btn-primary" onClick={() => setIsModalOpen(false)}>Сохранить ЗН</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;

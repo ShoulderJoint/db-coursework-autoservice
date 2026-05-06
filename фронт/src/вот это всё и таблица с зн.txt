@@ -1,0 +1,261 @@
+import React, { useState } from 'react';
+import './style.css';
+import {
+  NAV_ITEMS, MOCK_USERS, MOCK_CLIENTS, MOCK_CARS, MOCK_APPLICATION, MOCK_SERVICE_STATIONS, MOCK_STATUSES, MOCK_SERVICES,
+  MOCK_STAFF, MOCK_VENDORS, MOCK_WORK_ORDERS, MOCK_SPARE_PARTS_CONTRACTS, MOCK_WORK_ORDER_SERVICES, MOCK_WORK_ORDER_SPARE_PARTS,
+  MOCK_SPARE_PARTS_CONTRACT_ITEMS
+} from './data/mockData';
+import WorkOrderModal from './components/modals/WorkOrderModal';
+import LoginForm from './components/layout/LoginForm';
+import { Sidebar, Header } from './components/layout/Navigation';
+import WorkOrderTable from './components/tables/WorkOrderTable';
+
+/*├── data/
+│ └── mockData.js // Все наши массивы (MOCK_CLIENTS, MOCK_CARS и т.д.)
+├── components/
+│ ├── Layout/
+│ │ ├── Navigation.jsx // Сайдбар и шапка
+│ │ └── LoginForm.jsx // Окно входа
+│ ├── Tables/
+│ │ ├── WorkOrderTable.jsx
+│ │ ├── CarTable.jsx
+│ │ └── ServiceTable.jsx
+│ └── Modals/
+│ └──   WorkOrderModal.jsx // Та самая большая форма создания ЗН
+├── App.jsx // Главный файл: логика входа и переключения табов
+└── style.css // Стили*/
+
+function App() {
+
+  // Текущий пользователь (изначально пустой)
+  const [currentUser, setCurrentUser] = useState(null);
+
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+
+
+  // Управление вкладками
+  const handleTabClick = (tab) => setActiveTab(tab);
+
+  const handleLoginSuccess = (user) => {
+    setCurrentUser(user);
+  };
+
+  return (
+    <div className="app-container">
+      {!currentUser ? (
+        <LoginForm onLoginSuccess={handleLoginSuccess} />
+      ) : (
+        <>
+          {/* Сайдбар стоял тут первым */}
+          <Sidebar 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            currentUser={currentUser} 
+            onLogout={() => setCurrentUser(null)} 
+          />
+
+          <main className="content">
+            {/* Шапка стояла внутри main сразу первым элементом */}
+            <Header 
+              activeTab={activeTab} 
+              currentUser={currentUser} 
+              onOpenModal={() => setIsModalOpen(true)} 
+            />
+              <section id="view-container">
+                {activeTab === 'dashboard' && (
+                  <div className="dashboard-grid">
+                    <div className="dashboard-card">
+                      <h3>Профиль: {currentUser.name}</h3>
+                      <p>Статус: Постоянный клиент</p>
+                    </div>
+
+                    {currentUser.role === 'client' && (
+                      <>
+                        <div className="dashboard-card highlight">
+                          <h3>В работе</h3>
+                          {/* Считаем ЗН со статусом "В работе" для этого клиента */}
+                          <div className="big-number">2 автомобиля</div>
+                        </div>
+                        <div className="dashboard-card">
+                          <h3>Ваши бонусы</h3>
+                          <p>500 баллов</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'work-orders' && (
+                  <WorkOrderTable />
+                )}
+
+                {activeTab === 'clients' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Телефон</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_CLIENTS.map(c => (
+                        <tr key={c.id}>
+                          <td>{c.surname}</td>
+                          <td>{c.name}</td>
+                          <td>{c.patronymic}</td>
+                          <td>{c.phone}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+
+                {activeTab === 'cars' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Владелец</th><th>Марка</th><th>Модель</th><th>Год выпуска</th><th>VIN</th><th>Гос. номер</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_CARS
+                        .filter(car => currentUser.role === 'client' ? car.owner_id === currentUser.id : true)
+                        .map(car => (
+                          <tr key={car.id}>
+                            <td>{car.owner_id}</td>
+                            <td>{car.brand}</td>
+                            <td>{car.model}</td>
+                            <td>{car.production_year}</td>
+                            <td>{car.vin}</td>
+                            <td>{car.license_plate}</td>
+                          </tr>
+                        ))
+                      }
+                    </tbody>
+                  </table>
+                )}
+
+                {activeTab === 'applications' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Машина</th><th>Администратор, оформивший заявку</th><th>Описание проблем</th><th>Дата регистрации</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_APPLICATION.map(c => (
+                        <tr key={c.id}>
+                          <td>{c.car_id}</td>
+                          <td>{c.administrator_id}</td>
+                          <td>{c.troubles_description}</td>
+                          <td>{c.registration_date}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {activeTab === 'staff' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Филиал</th><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Должность</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_STAFF.map(c => (
+                        <tr key={c.id}>
+                          <td>{c.service_station_id}</td>
+                          <td>{c.surname}</td>
+                          <td>{c.name}</td>
+                          <td>{c.patronymic}</td>
+                          <td>{c.role}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {activeTab === 'service-stations' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Регион</th><th>Город</th><th>Улица</th><th>дом</th><th>Телефон</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_SERVICE_STATIONS.map(c => (
+                        <tr key={c.id}>
+                          <td>{c.region}</td>
+                          <td>{c.city}</td>
+                          <td>{c.street}</td>
+                          <td>{c.house}</td>
+                          <td>{c.phone_number}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {activeTab === 'service-catalog' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Название</th><th>Цена</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_SERVICES.map(c => (
+                        <tr key={c.id}>
+                          <td>{c.name}</td>
+                          <td>{c.price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {activeTab === 'vendors' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Регион</th><th>Город</th><th>Улица</th><th>Дом</th><th>Номер офиса/квартиры</th><th>Почтовый индекс</th>
+                        <th>ИНН</th><th>Телефон</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_VENDORS.map(c => (
+                        <tr key={c.id}>
+                          <td>{c.region}</td>
+                          <td>{c.city}</td>
+                          <td>{c.street}</td>
+                          <td>{c.house}</td>
+                          <td>{c.office_flat}</td>
+                          <td>{c.postcode}</td>
+                          <td>{c.TIN}</td>
+                          <td>{c.phone_number}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {activeTab === 'contracts' && (
+                  <table className="data-table">
+                    <thead>
+                      <tr><th>Поставщик</th><th>Дата</th><th>Итоговая цена</th></tr>
+                    </thead>
+                    <tbody>
+                      {MOCK_SPARE_PARTS_CONTRACTS.map(c => (
+                        <tr key={c.id}>
+                          <td>{c.vendor_id}</td>
+                          <td>{c.date}</td>
+                          <td>{c.total_price}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </section>
+            </main>
+
+          <WorkOrderModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            applications={MOCK_APPLICATION}
+            staff={MOCK_STAFF}
+            stations={MOCK_SERVICE_STATIONS}
+            statuses={MOCK_STATUSES}
+            services={MOCK_SERVICES}
+            clients={MOCK_CLIENTS}
+            cars={MOCK_CARS}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+export default App;
