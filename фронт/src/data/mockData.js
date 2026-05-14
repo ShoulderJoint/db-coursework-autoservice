@@ -13,65 +13,74 @@ export const NAV_ITEMS = [
   { id: 'contracts', label: 'Договоры', roles: ['root', 'admin', 'advisor'] }
 ];
 
-export const MOCK_SYSTEM_ROLES = [
+export const MOCK_ROLES = [
   { id: 1, system_name: 'root', display_name: 'Владелец' },
   { id: 2, system_name: 'admin', display_name: 'Администратор' },
   { id: 3, system_name: 'advisor', display_name: 'Мастер-приемщик' },
   { id: 4, system_name: 'client', display_name: 'Клиент' },
 ];
 
-export const MOCK_ROLES = [
+export const MOCK_ACCOUNTS = [
+  { id: 1, login: 'root', password: '123', role_id: 1, staff_id: 1, client_id: null },
+  { id: 2, login: 'admin', password: '123', role_id: 2, staff_id: 3, client_id: null },
+  { id: 3, login: 'master', password: '123', role_id: 3, staff_id: 8, client_id: null },
+  { id: 4, login: 'user', password: '123', role_id: 4, staff_id: null, client_id: 1 }, // Ссылка на Михуэля Шумахера
+  { id: 5, login: 'user1', password: '123', role_id: 4, staff_id: null, client_id: 2 }, //макс
+  { id: 6, login: 'user2', password: '123', role_id: 4, staff_id: null, client_id: 3 } //льюис
+];
+
+export const MOCK_JOB_TITLES = [
   { id: 1, name: "Директор" }, 
   { id: 2, name: "Администратор" },
   { id: 3, name: "Мастер-приёмщик" },
-  { id: 4, name: "Слесарь" },
-  { id: 5, name: "Диагност" },
+  { id: 4, name: "Слесарь Механосборочных работ" },
+  { id: 5, name: "Диагност-электрик" },
 ];
 
 export const MOCK_CLIENTS = [
-  { id: 1, surname: "Шумахер", name: "Михаэль", patronymic: "Рольфович", phone: "+79771234567", login: "user", password_hash: "hash123", system_role_id: 4 },
-  { id: 2, surname: "Ферстаппен", name: "Макс", patronymic: "Йосович", phone: "+79123456700", login: "user1", password_hash: "hash123", system_role_id: 4 },
-  { id: 3, surname: "Хэмилтон", name: "Льюис", patronymic: null, phone: "+79864456712", login: "user2", password_hash: "hash123", system_role_id: 4},
-  { id: 4, surname: "Сенна", name: "Айртон", patronymic: "Милтонович", phone: null, login: "user3", password_hash: "hash123", system_role_id: 4},
-  { id: 5, surname: "Лауда", name: "Николаус", patronymic: "Петрович", phone: null, login: "user4", password_hash: "hash123", system_role_id: 4},
-  { id: 6, surname: "Антонелли", name: "Кими", patronymic: "Маркович", phone: "+79823579235", login: "user5", password_hash: "hash123", system_role_id: 4 }
+  { id: 1, surname: "Шумахер", name: "Михаэль", patronymic: "Рольфович", phone: "+79771234567" },
+  { id: 2, surname: "Ферстаппен", name: "Макс", patronymic: "Йосович", phone: "+79123456700" },
+  { id: 3, surname: "Хэмилтон", name: "Льюис", patronymic: null, phone: "+79864456712" },
+  { id: 4, surname: "Сенна", name: "Айртон", patronymic: "Милтонович", phone: null },
+  { id: 5, surname: "Лауда", name: "Николаус", patronymic: "Петрович", phone: null },
+  { id: 6, surname: "Антонелли", name: "Кими", patronymic: "Маркович", phone: "+79823579235" }
 ];
 
 export const MOCK_CARS = [
-  { id: 1, client_id: 1, brand: "Mercedes-Benz", model: "W124", production_year: 1987, vin: "WDB1240201A123456", reg_number: "А777МР 77" },
-  { id: 2, client_id: 1, brand: "Renault", model: "Logan", production_year: 2012, vin: "X7LLSRGALH1234567", reg_number: "К123ОТ 150" },
-  { id: 3, client_id: 2, brand: "Lada", model: "Vesta", production_year: 2021, vin: "XTA218000M1234567", reg_number: "Е555КХ 197" },
-  { id: 4, client_id: 3, brand: "Lada", model: "Kalina", production_year: 2014, vin: "XTA111760E1234567", reg_number: "М890УЕ 750" },
-  { id: 5, client_id: 6, brand: "Nissan", model: "Qashqai (J10)", production_year: 2010, vin: "SJNFAAJ10U1234567", reg_number: "В444СС 799" },
-  { id: 6, client_id: 5, brand: "Lada", model: "Priora", production_year: 2015, vin: "XTA217030F1234567", reg_number: "Н001НН 05" },
-  { id: 7, client_id: 4, brand: "Tank", model: "300", production_year: 2023, vin: "X96TANK300P123456", reg_number: "Р111АА 777" },
-  { id: 8, client_id: 4, brand: "Tank", model: "300", production_year: 2024, vin: "X96TANK300R123456", reg_number: "С222ВВ 777" },
-  { id: 9, client_id: 1, brand: "Changan", model: "Alsvin", production_year: 2023, vin: "LSYC11E40P1234567", reg_number: "Х321КМ 790" },
-  { id: 10, client_id: 3, brand: "Haval", model: "Jolion", production_year: 2022, vin: "X9FCH4A12N1234567", reg_number: "Т999ММ 199" },
-  { id: 11, client_id: 6, brand: "Toyota", model: "Mark II (JZX100)", production_year: 1999, vin: "JZX100-6012345", reg_number: "К888ОК 125" }
+  { id: 1, owner_id: 1, brand: "Mercedes-Benz", model: "W124", production_year: 1987, vin: "WDB1240201A123456", license_plate: "А777МР 77" },
+  { id: 2, owner_id: 1, brand: "Renault", model: "Logan", production_year: 2012, vin: "X7LLSRGALH1234567", license_plate: "К123ОТ 150" },
+  { id: 3, owner_id: 2, brand: "Lada", model: "Vesta", production_year: 2021, vin: "XTA218000M1234567", license_plate: "Е555КХ 197" },
+  { id: 4, owner_id: 3, brand: "Lada", model: "Kalina", production_year: 2014, vin: "XTA111760E1234567", license_plate: "М890УЕ 750" },
+  { id: 5, owner_id: 6, brand: "Nissan", model: "Qashqai (J10)", production_year: 2010, vin: "SJNFAAJ10U1234567", license_plate: "В444СС 799" },
+  { id: 6, owner_id: 5, brand: "Lada", model: "Priora", production_year: 2015, vin: "XTA217030F1234567", license_plate: "Н001НН 05" },
+  { id: 7, owner_id: 4, brand: "Tank", model: "300", production_year: 2023, vin: "X96TANK300P123456", license_plate: "Р111АА 777" },
+  { id: 8, owner_id: 4, brand: "Tank", model: "300", production_year: 2024, vin: "X96TANK300R123456", license_plate: "С222ВВ 777" },
+  { id: 9, owner_id: 1, brand: "Changan", model: "Alsvin", production_year: 2023, vin: "LSYC11E40P1234567", license_plate: "Х321КМ 790" },
+  { id: 10, owner_id: 3, brand: "Haval", model: "Jolion", production_year: 2022, vin: "X9FCH4A12N1234567", license_plate: "Т999ММ 199" },
+  { id: 11, owner_id: 6, brand: "Toyota", model: "Mark II (JZX100)", production_year: 1999, vin: "JZX100-6012345", license_plate: "К888ОК 125" }
 ];
 
-export const MOCK_APPLICATIONS= [
-  { id: 1, car_id: 4, staff_id: 3, description: "Нужно заменить моторное масло и заправить кондиционер", created_at: "24.04.2026", updated_at: null },
-  { id: 2, car_id: 3, staff_id: 6, description: "Шум и скрип в подвеске", created_at: "10.02.2020", updated_at: null},
-  { id: 3, car_id: 7, staff_id: 7, description: "Повышенный расход масла и топлива", created_at: "11.05.2022", updated_at: "12.05.2022" },
-  { id: 4, car_id: 11, staff_id: 6, description: "Горит check engine", created_at: "07.11.2019", updated_at: null },
-  { id: 5, car_id: 2, staff_id: 7, description: "Поменять шины на передних колёсах", created_at: "08.11.2025", updated_at: "08.11.2025" },
-  { id: 6, car_id: 3, staff_id: 3, description: "Замена воздушных и салонных фильтров", created_at: "01.09.2023", updated_at: null },
+export const MOCK_APPLICATION = [
+  { id: 1, car_id: 4, administrator_id: 3, troubles_description: "Нужно заменить моторное масло и заправить кондиционер", registration_date: "24.04.2026" },
+  { id: 2, car_id: 3, administrator_id: 6, troubles_description: "Шум и скрип в подвеске", registration_date: "10.02.2020" },
+  { id: 3, car_id: 7, administrator_id: 7, troubles_description: "Повышенный расход масла и топлива", registration_date: "11.05.2022" },
+  { id: 4, car_id: 11, administrator_id: 6, troubles_description: "Горит check engine", registration_date: "07.11.2019" },
+  { id: 5, car_id: 2, administrator_id: 7, troubles_description: "Поменять шины на передних колёсах", registration_date: "08.11.2025" },
+  { id: 6, car_id: 3, administrator_id: 3, troubles_description: "Замена воздушных и салонных фильтров", registration_date: "01.09.2023" },
 ];
 
-export const MOCK_STATIONS = [
-  { id: 1, region: "Самарская область", city: "Самара", street: "Академика Павлова", house: "1", phone: "+74950001122" },
-  { id: 2, region: "Самарская область", city: "Тольятти", street: "Комсомольская", house: "44", phone: "+74950003344" }
+export const MOCK_SERVICE_STATIONS = [
+  { id: 1, region: "Самарская область", city: "Самара", street: "Академика Павлова", house: "1", phone_number: "+74950001122" },
+  { id: 2, region: "Самарская область", city: "Тольятти", street: "Комсомольская", house: "44", phone_number: "+74950003344" }
 ];
 
-export const MOCK_ORDER_STATUSES = [
-  { id: 1, name: "Создан", description: "Все проблемы обсуждены, ожидается место для автомобиля" },
-  { id: 2, name: "В работе", description: "Заказ-наряд принят, ведутся работы" },
-  { id: 3, name: "В_ожидании", description: "Работы над Заказ-нарядом приостановлены" },
-  { id: 4, name: "Авто_готово_к_выдаче", description: "Все работы завершены и оплачены, клиент может забирать автомобиль" },
-  { id: 5, name: "Отменён", description: "Заказ-наряд отменён по требованию клиента или невозможности его выполнения" },
-  { id: 6, name: "Завершён", description: "Работы завершены и оплачены, автомобиль выдан" }
+export const MOCK_STATUSES = [
+  { id: 1, name: "В работе", description: "Заказ-наряд принят, ведутся работы" },
+  { id: 2, name: "Завершен", description: "Работы завершены, автомобиль выдан" },
+  { id: 3, name: "Отменен", description: "Заказ-наряд отменён по требованию клиента или невозможности его выполнения" },
+  { id: 4, name: "В ожидании комплектующих", description: "Работы приостановлены до момента получения нужны комплектующих" },
+  { id: 5, name: "В ожидании оплаты", description: "Все работы завершены, ожидается оплата" },
+  { id: 6, name: "Авто готово к выдаче", description: "Все работы завершены и оплачены, клиент может забирать автомобиль" }
 ];
 
 export const MOCK_SERVICES = [
@@ -82,42 +91,15 @@ export const MOCK_SERVICES = [
 ];
 
 export const MOCK_STAFF = [
-  { 
-    id: 1, station_id: 1, surname: "Иванов", name: "Иван", patronymic: "Иванович", 
-    role_id: 3, login: "ivanov_mp", password_hash: "hash123", system_role_id: 3 
-  }, // Мастер-приемщик
-  { 
-    id: 2, station_id: 1, surname: "Петров", name: "Петр", patronymic: null, 
-    role_id: 4, login: null, password_hash: null, system_role_id: null 
-  }, // Слесарь (без доступа)
-  { 
-    id: 3, station_id: 1, surname: "Сидоров", name: "Сидор", patronymic: "Сидорович", 
-    role_id: 2, login: "admin", password_hash: "123", system_role_id: 2 
-  }, // Администратор
-  { 
-    id: 4, station_id: 2, surname: "Шишкина", name: "Евгения", patronymic: "Олеговна", 
-    role_id: 4, login: null, password_hash: null, system_role_id: null 
-  }, // Слесарь (без доступа)
-  { 
-    id: 5, station_id: 2, surname: "Литин", name: "Кирилл", patronymic: "Артёмович", 
-    role_id: 5, login: null, password_hash: null, system_role_id: null 
-  }, // Диагност (без доступа)
-  { 
-    id: 6, station_id: 2, surname: "Ленин", name: "Петр", patronymic: null, 
-    role_id: 2, login: "lenin_admin", password_hash: "123", system_role_id: 2 
-  }, // Администратор
-  { 
-    id: 7, station_id: 1, surname: "Лобанов", name: "Сергей", patronymic: "Петрович", 
-    role_id: 2, login: "lobanov_tech", password_hash: "123", system_role_id: 2 
-  }, // Администратор
-  { 
-    id: 8, station_id: 2, surname: "Быкова", name: "Валерия", patronymic: "Петровна", 
-    role_id: 3, login: "master", password_hash: "123", system_role_id: 3 
-  }, // Мастер-приемщик
-  { 
-    id: 9, station_id: 1, surname: "Кабанов", name: "Кабан", patronymic: "Кабаныч", 
-    role_id: 1, login: "root", password_hash: "123", system_role_id: 1 
-  }  // Владелец
+  { id: 1, service_station_id: 1, surname: "Иванов", name: "Иван", patronymic: "Иванович", job_id: 3},
+  { id: 2, service_station_id: 1, surname: "Петров", name: "Петр", patronymic: null, job_id: 4 },
+  { id: 3, service_station_id: 1, surname: "Сидоров", name: "Сидор", patronymic: "Сидорович", job_id: 2 },
+  { id: 4, service_station_id: 2, surname: "Шишкина", name: "Евгения", patronymic: "Олеговна", job_id: 4 },
+  { id: 5, service_station_id: 2, surname: "Литин", name: "Кирилл", patronymic: "Артёмович", job_id: 5 },
+  { id: 6, service_station_id: 2, surname: "Ленин", name: "Петр", patronymic: null, job_id: 2 },
+  { id: 7, service_station_id: 1, surname: "Лобанов", name: "Сергей", patronymic: "Петрович", job_id: 2 },
+  { id: 8, service_station_id: 2, surname: "Быкова", name: "Валерия", patronymic: "Петровна", job_id: 3 },
+  { id: 9, service_station_id: 1, surname: "Кабанов", name: "Кабан", patronymic: "Кабаныч", job_id: 1 }
 ];
 
 export const MOCK_VENDORS = [
