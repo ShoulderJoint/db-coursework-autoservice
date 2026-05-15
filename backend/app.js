@@ -6,6 +6,7 @@ const cors = require('cors');
 
 const usersRouter = require('./routes/users');
 const staffRouter = require('./routes/staff');
+const logisticsRouter=require('./routes/logistics');
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(cookieParser());
 app.use(cors());
 
 app.use('/users', usersRouter);
-app.use('/staff', staffRouter)
+app.use('/logistics', logisticsRouter);
+app.use('/staff', staffRouter);
 
 module.exports = app;

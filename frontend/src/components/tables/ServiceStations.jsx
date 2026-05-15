@@ -1,14 +1,22 @@
-import React from 'react';
-import { MOCK_SERVICE_STATIONS } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
 
-const SetviceStationsTable = () => {
+const ServiceStationsTable = () => {
+    const [stations, setStations] = useState([]);
+
+    useEffect(() => {
+        fetch('http://localhost:3000/logistics/stations')
+            .then(res => res.json())
+            .then(data => setStations(data))
+            .catch(err => console.error(err));
+    }, []);
+
     return (
         <table className="data-table">
             <thead>
-                <tr><th>Регион</th><th>Город</th><th>Улица</th><th>дом</th><th>Телефон</th></tr>
+                <tr><th>Регион</th><th>Город</th><th>Улица</th><th>Дом</th><th>Телефон</th></tr>
             </thead>
             <tbody>
-                {MOCK_SERVICE_STATIONS.map(c => (
+                {stations.map(c => (
                     <tr key={c.id}>
                         <td>{c.region}</td>
                         <td>{c.city}</td>
@@ -22,4 +30,4 @@ const SetviceStationsTable = () => {
     );
 };
 
-export default SetviceStationsTable;
+export default ServiceStationsTable;
