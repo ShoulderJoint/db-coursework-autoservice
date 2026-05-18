@@ -1,0 +1,121 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../db'); 
+
+router.get('/', async (req, res) => {
+    // Временно читаем роль и ID из URL-параметров
+    const { role, userId } = req.query;
+
+    try {
+        let orders;
+        if (role === 'client') {
+            orders = await db.any(`
+                SELECT 
+                    o.id AS order_id,
+                    a.id AS application_id
+                    s.surname AS staff_surname,
+                    s.name AS staff_name,
+                    s.patronymic AS staff_patronymic,
+                    st.region,
+                    st.city,
+                    st.street,
+                    st.house,
+                    os.name AS status_name,
+                    o.cost_parts,
+                    o.cost_services,
+                    o.cost,
+                    o.created_at,
+                    o.closed_at,
+                    c.brand,
+                    c.model,
+                    c.reg_number
+                FROM orders o
+                join applications a on o.application_id=a.id
+                left join staff s on a.staff_id=s.id
+                JOIN order_statuses os ON o.status_id = os.id
+                join stations st on s.station_id=st.id
+                join cars c on a.car_id=c.id
+                join clients cl on c.client_id=cl.id
+                WHERE cl.id = $1
+                ORDER BY a.id DESC
+            `, [userId]);
+            
+        } else {
+            orders = await db.any(`
+                SELECT 
+                    o.id AS order_id,
+                    a.id AS application_id,
+                    s.surname AS staff_surname,
+                    s.name AS staff_name,
+                    s.patronymic AS staff_patronymic,
+                    st.region,
+                    st.city,
+                    st.street,
+                    st.house,
+                    os.name AS status_name,
+                    o.cost_parts,
+                    o.cost_services,
+                    o.cost,
+                    o.created_at,
+                    o.closed_at,
+                    c.brand,
+                    c.model,
+                    c.reg_number,
+                    cl.surname AS client_surname,
+                    cl.name AS client_name,
+                    cl.patronymic AS client_patronymic
+                FROM orders o
+                join applications a on o.application_id=a.id
+                join staff s on a.staff_id=s.id
+                join stations st on s.station_id=st.id
+                JOIN order_statuses os ON o.status_id = os.id
+                join cars c on a.car_id=c.id
+                join clients cl on c.client_id=cl.id
+                ORDER BY a.id DESC
+            `);
+        }
+        const statuses = await db.any('SELECT id, name FROM order_statuses');
+
+        // Отправляем данные и метаданные
+        res.json({
+            orders: orders,
+            meta: {
+                statuses: statuses
+            }
+        });
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Ошибка получения автопарка" });
+    }
+});
+router.get('/:id/parts', async (req, res) => {
+    try {
+        const parts = await db.any(`
+            SELECT op.id, pci.name, op.count, op.cost
+            FROM order_parts op
+            JOIN parts_contract_items pci ON op.spare_part_id = pci.id
+            WHERE op.work_order_id = $1
+        `, [req.params.id]);
+        res.json(parts);
+    } catch (error) {
+        res.status(500).json({ error: "Ошибка получения запчастей" });
+    }
+});
+
+// Получение услуг конкретного ЗН
+router.get('/:id/services', async (req, res) => {
+    try {
+        const services = await db.any(`
+            SELECT os.id, s.name, os.count, os.coefficient, os.cost
+            FROM order_service os
+            JOIN services s ON os.service_id = s.id
+            WHERE os.work_order_id = $1
+        `, [req.params.id]);
+        res.json(services);
+    } catch (error) {
+        res.status(500).json({ error: "Ошибка получения услуг" });
+    }
+});
+
+module.exports = router;

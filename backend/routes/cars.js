@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
             cars = await db.any(`
                 SELECT 
                     c.id, c.brand, c.model, c.production_year, c.reg_number, c.vin,
-                    cl.surname, cl.name, cl.phone
+                    cl.patronymic, cl.surname, cl.name, cl.phone
                 FROM cars c
                 JOIN clients cl ON c.client_id = cl.id
                 ORDER BY c.id DESC
