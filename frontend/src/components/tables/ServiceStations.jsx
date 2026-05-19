@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const ServiceStationsTable = () => {
+    
     const [stations, setStations] = useState([]);
 
     useEffect(() => {
@@ -22,7 +23,7 @@ const ServiceStationsTable = () => {
                         <td>{c.city}</td>
                         <td>{c.street}</td>
                         <td>{c.house}</td>
-                        <td>{c.phone_number}</td>
+                        <td>{c.phone}</td>
                     </tr>
                 ))}
             </tbody>

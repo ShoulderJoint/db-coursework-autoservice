@@ -1,39 +1,79 @@
-import React from 'react';
-import { MOCK_APPLICATION, MOCK_CARS, MOCK_STAFF } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
 
 const ApplicationTable = ({ currentUser }) => {
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 2. Создаем отфильтрованный список перед return
-  const filteredApps = MOCK_APPLICATION.filter(app => {
-    if (currentUser?.role !== 'client') return true; // Админ видит всё
-    const car = MOCK_CARS.find(c => c.id === app.car_id);
-    return car?.owner_id === currentUser.personId; // Клиент видит только свои
-  });
+  useEffect(() => {
+    const role = currentUser?.role;
+    const userId = currentUser?.personId || currentUser?.id;
+
+    // Запрос к серверу с передачей роли и ID текущего пользователя
+    fetch(`http://localhost:3000/applications?role=${role}&userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        setApplications(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Ошибка при загрузке заявок:', err);
+        setLoading(false);
+      });
+  }, [currentUser]);
+
+  if (loading) return <p>Загрузка списка заявок...</p>;
+
+  // Форматирование даты в привычный вид (ДД.ММ.ГГГГ)
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU');
+  };
+
+  // Сборка ФИО из отдельных полей с обработкой пустых значений отчества
+  const formatFullName = (surname, name, patronymic) => {
+    if (!surname && !name) return 'Не назначен';
+    return `${surname || ''} ${name || ''} ${patronymic || ''}`.trim().replace(/\s+/g, ' ');
+  };
+
+  const isClient = currentUser?.role === 'client';
 
   return (
     <table className="data-table">
       <thead>
         <tr>
-          <th>Машина</th>
-          <th>Администратор</th>
-          <th>Описание проблем</th>
-          <th>Дата регистрации</th>
+          <th>ID</th>
+          <th>Дата</th>
+          {!isClient && <th>Клиент</th>}
+          <th>Автомобиль</th>
+          <th>Гос. номер</th>
+          <th>Описание проблемы</th>
+          <th>Принял сотрудник</th>
         </tr>
       </thead>
       <tbody>
-        {filteredApps.map(app => {
-          const car = MOCK_CARS.find(c => c.id === app.car_id);
-          const staff = MOCK_STAFF.find(s => s.id === app.administrator_id);
-          
-          return (
-            <tr key={app.id}>
-              <td>{car ? `${car.brand} ${car.model}` : `ID: ${app.car_id}`}</td>
-              <td>{staff ? `${staff.surname} ${staff.name}` : `ID: ${app.administrator_id}`}</td>
-              <td>{app.troubles_description}</td>
-              <td>{app.registration_date}</td>
-            </tr>
-          );
-        })}
+        {applications.map(app => (
+          <tr key={app.id}>
+            <td>{app.id}</td>
+            <td>{formatDate(app.created_at)}</td>
+            
+            {/* Колонка клиента отображается только для персонала */}
+            {!isClient && (
+              <td>
+                {formatFullName(app.client_surname, app.client_name, app.client_patronymic)}
+              </td>
+            )}
+            
+            <td>
+              {`${app.brand} ${app.model} (${app.production_year} г.)`}
+            </td>
+            <td>{app.reg_number}</td>
+            <td>{app.description || 'Нет описания'}</td>
+            <td>
+              {formatFullName(app.staff_surname, app.staff_name, app.staff_patronymic)}
+            </td>
+          </tr>
+        ))}
       </tbody>
     </table>
   );

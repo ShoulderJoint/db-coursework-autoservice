@@ -1,24 +1,45 @@
-import React from 'react';
-import { MOCK_SPARE_PARTS_CONTRACTS } from '../../data/mockData';
+import React, { useState, useEffect } from 'react';
 
-const SparePartsContractsTable = () => {
+const PartsContractsTable = () => {
+
+  const [partsContracts, setPartsContracts] = useState([]);
+  
+      useEffect(() => {
+          fetch('http://localhost:3000/logistics/partscontracts')
+              .then(res => res.json())
+              .then(data => setPartsContracts(data))
+              .catch(err => console.error(err));
+      }, []);
+
   return (
     <table className="data-table">
       <thead>
         <tr>
           <th>ID</th>
-          <th>ID Поставщика</th>
-          <th>Дата</th>
-          <th>Итоговая цена</th>
+          <th>Поставщик</th>
+          <th>Дата создания</th>
+          <th>Последняя дата обновления</th>
+          <th>PDF файл документа</th>
         </tr>
       </thead>
       <tbody>
-        {MOCK_SPARE_PARTS_CONTRACTS.map(c => (
-          <tr key={c.id}>
-            <td>{c.id}</td>
-            <td>{c.vendor_id}</td>
-            <td>{c.date}</td>
-            <td>{c.total_price.toLocaleString()} руб.</td>
+        {partsContracts.map(pc => (
+          <tr key={pc.id}>
+            <td>{pc.id}</td>
+            <td>{pc.name}</td>
+            <td>{pc.created}</td>
+            <td>{pc.updated || ''}</td>
+            <td>{pc.file_name ? (
+                <a 
+                  href={`http://localhost:3000/uploads/contracts/${pc.file_name}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  {pc.file_name}
+                </a>
+              ) : (
+                'Файл не загружен'
+              )}</td>
           </tr>
         ))}
       </tbody>
@@ -26,4 +47,4 @@ const SparePartsContractsTable = () => {
   );
 };
 
-export default SparePartsContractsTable;
+export default PartsContractsTable;

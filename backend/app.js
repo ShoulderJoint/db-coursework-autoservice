@@ -10,6 +10,7 @@ const carsRouter = require('./routes/cars');
 const staffRouter = require('./routes/staff');
 const applicationsRouter = require('./routes/applications');
 const workOrderRouter = require('./routes/orders');
+const catalogRouter = require('./routes/catalog');
 const logisticsRouter=require('./routes/logistics');
 
 const app = express();
@@ -20,11 +21,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 app.use('/users', usersRouter);
 app.use('/clients', clientsRouter);
 app.use('/cars', carsRouter);
 app.use('/applications', applicationsRouter);
 app.use('/orders', workOrderRouter);
+app.use('/catalog', catalogRouter);
 app.use('/logistics', logisticsRouter);
 app.use('/staff', staffRouter);
 
