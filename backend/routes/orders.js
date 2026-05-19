@@ -89,6 +89,35 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: "Ошибка получения автопарка" });
     }
 });
+router.post('/', async (req, res) => {
+    const { applicationId, staffId, services } = req.body;
+
+    try {
+        //запуск транзакции
+        await db.tx(async t => {
+            const order = await t.one(`
+                INSERT INTO orders (application_id, staff_id)
+                VALUES ($1, $2)
+                RETURNING id
+            `, [applicationId, staffId]);
+
+            if (services && services.length > 0) {
+                const queries = services.map(s => {
+                    return t.none(`
+                        INSERT INTO order_service (service_id, work_order_id, count, coefficient, cost)
+                        VALUES ($1, $2, $3, $4, $5)
+                    `, [s.serviceId, order.id, s.count, s.coeff, s.cost]);
+                });
+                await t.batch(queries);
+            }
+            return order;
+        });
+        res.status(201).json({ message: "Заказ-наряд успешно создан" });
+    } catch (error) {
+        console.error('Ошибка при создании ЗН:', error);
+        res.status(500).json({ error: "Ошибка при сохранении в базу данных" });
+    }
+});
 router.get('/:id/parts', async (req, res) => {
     try {
         const parts = await db.any(`

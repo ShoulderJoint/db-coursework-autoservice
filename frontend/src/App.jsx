@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './style.css';
 import {
   NAV_ITEMS, MOCK_ACCOUNTS, MOCK_ROLES, MOCK_JOB_TITLES, MOCK_CLIENTS, MOCK_CARS, MOCK_APPLICATION, MOCK_SERVICE_STATIONS, MOCK_STATUSES, 
@@ -49,6 +49,63 @@ function App() {
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
   };
+
+  const [applications, setApplications] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [stations, setStations] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [services, setServices] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [cars, setCars] = useState([]);
+
+  useEffect(() => {
+  const host = 'http://localhost:3000';
+
+  // Загрузка заявок
+  fetch(`${host}/applications`)
+    .then(res => res.json())
+    .then(data => setApplications(data))
+    .catch(err => console.error('Ошибка заявок:', err));
+
+  // Загрузка сотрудников
+  fetch(`${host}/staff`)
+    .then(res => res.json())
+    .then(data => setStaff(data.staff))
+    .catch(err => console.error('Ошибка сотрудников:', err));
+
+  // Загрузка филиалов (из logistics.js)
+  fetch(`${host}/logistics/stations`)
+    .then(res => res.json())
+    .then(data => setStations(data))
+    .catch(err => console.error('Ошибка филиалов:', err));
+
+  // Загрузка клиентов
+  fetch(`${host}/clients`)
+    .then(res => res.json())
+    .then(data => setClients(data))
+    .catch(err => console.error('Ошибка клиентов:', err));
+
+  // Загрузка автомобилей
+  fetch(`${host}/cars`)
+    .then(res => res.json())
+    .then(data => setCars(data))
+    .catch(err => console.error('Ошибка автомобилей:', err));
+
+  // Загрузка услуг (каталога)
+  fetch(`${host}/catalog`)
+    .then(res => res.json())
+    .then(data => setServices(data))
+    .catch(err => console.error('Ошибка услуг:', err));
+
+  fetch(`${host}/orders`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.meta && data.meta.statuses) {
+        setStatuses(data.meta.statuses);
+      }
+    })
+    .catch(err => console.error('Ошибка статусов:', err));
+}, []);
 
   return (
     <div className="app-container">
@@ -131,13 +188,13 @@ function App() {
           <WorkOrderModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
-            applications={MOCK_APPLICATION}
-            staff={MOCK_STAFF}
-            stations={MOCK_SERVICE_STATIONS}
-            statuses={MOCK_STATUSES}
-            services={MOCK_SERVICES}
-            clients={MOCK_CLIENTS}
-            cars={MOCK_CARS}
+            applications={applications}
+            staff={staff}
+            stations={stations}
+            statuses={statuses}
+            services={services}
+            clients={clients}
+            cars={cars}
           />
         </>
       )}

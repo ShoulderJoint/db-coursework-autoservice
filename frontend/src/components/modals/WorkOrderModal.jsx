@@ -14,27 +14,32 @@ const WorkOrderModal = ({
   // Состояния для формы ЗН
   const [orderData, setOrderData] = useState({
     applicationId: '',
-    advisorId: '',
+    staffId: '',
     stationId: '',
     statusId: 1
   });
 
   const [selectedServices, setSelectedServices] = useState([
-    { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }
+    { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, cost: 0 }
   ]);
 
   if (!isOpen) return null;
 
+  const safeApplications = Array.isArray(applications) ? applications : [];
+  const safeStaff = Array.isArray(staff) ? staff : (staff?.staff || []);
+  const safeStations = Array.isArray(stations) ? stations : [];
+  const safeStatuses = Array.isArray(statuses) ? statuses : (statuses?.meta?.statuses || []);
+  const safeServices = Array.isArray(services) ? services : [];
+
   // Логика поиска связанных данных
-  const selectedApp = applications.find(a => a.id === parseInt(orderData.applicationId));
-  const selectedCar = selectedApp ? cars.find(c => c.id === selectedApp.car_id) : null;
-  const selectedOwner = selectedCar ? clients.find(c => c.id === selectedCar.owner_id) : null;
+  const selectedApp = safeApplications.find(a => String(a.id) === String(orderData.applicationId));
+  
 
   // Функции управления строками
   const addServiceRow = () => {
     setSelectedServices([
       ...selectedServices,
-      { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }
+      { rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, cost: 0 }
     ]);
   };
 
@@ -49,18 +54,56 @@ const WorkOrderModal = ({
         const p = parseFloat(updated.price) || 0;
         const c = parseFloat(updated.coeff) || 0;
         const cnt = parseFloat(updated.count) || 0;
-        updated.subtotal = p * c * cnt;
+        updated.cost = p * c * cnt;
         return updated;
       }
       return row;
     }));
   };
 
-  const grandTotal = selectedServices.reduce((sum, row) => sum + row.subtotal, 0);
+  const grandTotal = selectedServices.reduce((sum, row) => sum + row.cost, 0);
+  
+const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const handleClose = () => {
-    setOrderData({ applicationId: '', advisorId: '', stationId: '', statusId: 1 });
-    setSelectedServices([{ rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }]);
+    // Фильтруем только те строки, где реально выбрана услуга
+    const validServices = selectedServices.filter(s => s.serviceId !== 0 && s.serviceId !== '0');
+
+    const payload = {
+      applicationId: orderData.applicationId,
+      staffId: orderData.staffId,
+      statusId: orderData.statusId,
+      services: validServices
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        alert('Заказ-наряд успешно создан!');
+        // Сброс формы в дефолтное состояние
+        setOrderData({ applicationId: '', staffId: '', stationId: '', statusId: 1 });
+        setSelectedServices([{ rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, subtotal: 0 }]);
+        onClose(); 
+      } else {
+        const err = await response.json();
+        alert(`Ошибка сервера: ${err.error}`);
+      }
+    } catch (error) {
+      console.error('Ошибка отправки формы:', error);
+      alert('Не удалось связаться с сервером');
+    }
+  };
+
+  const handleCancel = () => {
+    setOrderData({ applicationId: '', staffId: '', stationId: '', statusId: 1 });
+    setSelectedServices([{ rowId: Date.now(), serviceId: 0, price: 0, coeff: 1, count: 1, cost: 0 }]);
     onClose();
   };
 
@@ -68,7 +111,7 @@ const WorkOrderModal = ({
     <div className="modal" style={{ display: 'flex' }}>
       <div className="modal-content" style={{ maxWidth: '800px', width: '100%' }}>
         <h2>Новый заказ-наряд</h2>
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={handleSubmit}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
             <div className="form-column">
               <div className="form-group">
@@ -80,18 +123,29 @@ const WorkOrderModal = ({
                   <option value="">Выберите активную заявку...</option>
                   {applications.map(app => (
                     <option key={app.id} value={app.id}>
-                      Заявка №{app.id} ({app.troubles_description.substring(0, 30)}...)
+                      Заявка №{app.id} ({app.description.substring(0, 30)}...)
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="form-group">
-                <label>Клиент:</label>
-                <input type="text" readOnly value={selectedOwner ? `${selectedOwner.surname} ${selectedOwner.name}` : 'Выберите заявку'} style={{ backgroundColor: '#f8fafc' }} />
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Клиент:</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#f8fafc' }}
+                  value={selectedApp ? `${selectedApp.client_surname || ''} ${selectedApp.client_name || ''}`.trim() : 'Выберите заявку'} 
+                />
               </div>
-              <div className="form-group">
-                <label>Автомобиль:</label>
-                <input type="text" readOnly value={selectedCar ? `${selectedCar.brand} ${selectedCar.model} (${selectedCar.license_plate})` : 'Выберите заявку'} style={{ backgroundColor: '#f8fafc' }} />
+              
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Автомобиль:</label>
+                <input 
+                  type="text" 
+                  readOnly 
+                  style={{ width: '100%', padding: '8px', backgroundColor: '#f8fafc' }}
+                  value={selectedApp ? `${selectedApp.brand || ''} ${selectedApp.model || ''} (${selectedApp.reg_number || ''})` : 'Выберите заявку'} 
+                />
               </div>
             </div>
 
@@ -105,17 +159,11 @@ const WorkOrderModal = ({
               </div>
               <div className="form-group">
                 <label>Мастер-приёмщик:</label>
-                <select value={orderData.advisorId} onChange={(e) => setOrderData({ ...orderData, advisorId: e.target.value })}>
+                <select value={orderData.staffId} onChange={(e) => setOrderData({ ...orderData, staffId: e.target.value })}>
                   <option value="">Выберите мастера...</option>
-                  {staff.filter(s => s.role === 'Мастер-приемщик').map(s => (
+                  {staff.filter(s => s.role_id === 3).map(s => (
                     <option key={s.id} value={s.id}>{s.surname} {s.name}</option>
                   ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Текущий статус:</label>
-                <select value={orderData.statusId} onChange={(e) => setOrderData({ ...orderData, statusId: e.target.value })}>
-                  {statuses.map(stat => <option key={stat.id} value={stat.id}>{stat.name}</option>)}
                 </select>
               </div>
             </div>
@@ -132,7 +180,7 @@ const WorkOrderModal = ({
                 <input type="number" value={row.price} readOnly placeholder="Цена" />
                 <input type="number" step="0.1" value={row.coeff} onChange={(e) => updateRow(row.rowId, 'coeff', e.target.value)} placeholder="Коэфф." />
                 <input type="number" value={row.count} onChange={(e) => updateRow(row.rowId, 'count', e.target.value)} placeholder="Кол-во" />
-                <input type="number" value={row.subtotal.toFixed(2)} readOnly style={{ backgroundColor: '#f1f5f9' }} />
+                <input type="number" value={row.cost.toFixed(2)} readOnly style={{ backgroundColor: '#f1f5f9' }} />
               </div>
             ))}
           </div>
@@ -142,8 +190,8 @@ const WorkOrderModal = ({
             <strong>Всего к оплате: {grandTotal.toFixed(2)} руб.</strong>
           </div>
           <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-            <button type="button" className="btn-text" onClick={handleClose}>Отмена</button>
-            <button type="submit" className="btn-primary" onClick={handleClose}>Сохранить ЗН</button>
+            <button type="button" className="btn-text" onClick={handleCancel}>Отмена</button>
+            <button type="submit" className="btn-primary">Сохранить ЗН</button>
           </div>
         </form>
       </div>

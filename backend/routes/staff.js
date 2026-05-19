@@ -8,6 +8,7 @@ router.get('/', async (req, res) => {
         const staffList = await db.any(`
             SELECT 
                 s.id, 
+                s.role_id,
                 s.surname, 
                 s.name, 
                 s.patronymic, 
