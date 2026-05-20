@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './style.css';
 import {
-  NAV_ITEMS, MOCK_ACCOUNTS, MOCK_ROLES, MOCK_JOB_TITLES, MOCK_CLIENTS, MOCK_CARS, MOCK_APPLICATION, MOCK_SERVICE_STATIONS, MOCK_STATUSES, 
-  MOCK_SERVICES,MOCK_STAFF, MOCK_VENDORS, MOCK_WORK_ORDERS, MOCK_SPARE_PARTS_CONTRACTS, MOCK_WORK_ORDER_SERVICES, MOCK_WORK_ORDER_SPARE_PARTS,
+  NAV_ITEMS, MOCK_ACCOUNTS, MOCK_ROLES, MOCK_JOB_TITLES, MOCK_CLIENTS, MOCK_CARS, MOCK_APPLICATION, MOCK_SERVICE_STATIONS, MOCK_STATUSES,
+  MOCK_SERVICES, MOCK_STAFF, MOCK_VENDORS, MOCK_WORK_ORDERS, MOCK_SPARE_PARTS_CONTRACTS, MOCK_WORK_ORDER_SERVICES, MOCK_WORK_ORDER_SPARE_PARTS,
   MOCK_SPARE_PARTS_CONTRACT_ITEMS
 } from './data/mockData';
 import WorkOrderModal from './components/modals/WorkOrderModal';
 import WorkOrderDetailsModal from './components/modals/WorkOrderDetailsModal';
 import ClientModal from './components/modals/ClientModal';
+import CarModal from './components/modals/CarModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -49,14 +50,31 @@ function App() {
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
 
+  const [isCarModalOpen, setIsCarModalOpen] = useState(false);
+  const [selectedCar, setSelectedCar] = useState(null);
+
   const handleOpenPrimaryModal = () => {
-    if (activeTab === 'work-orders') {
-      setIsModalOpen(true);
-    } else if (activeTab === 'clients') {
-      setSelectedClient(null); 
-      setIsClientModalOpen(true); 
+    switch (activeTab) {
+      case 'work-orders':
+        setIsModalOpen(true);
+        break;
+      case 'clients':
+        setSelectedClient(null); 
+        setIsClientModalOpen(true);
+        break;
+      case 'cars':
+        setSelectedCar(null);
+        setIsCarModalOpen(true);
+        break;
+      case 'applications':
+        // Задел на следующий шаг
+        // setSelectedApplication(null);
+        // setIsAppModalOpen(true);
+        break;
+      default:
+        console.warn(`Нет обработчика создания для вкладки: ${activeTab}`);
+        break;
     }
-    // Позже добавим сюда if (activeTab === 'applications') и т.д.
   };
 
   // Управление вкладками
@@ -73,6 +91,13 @@ function App() {
       .catch(err => console.error('Ошибка клиентов:', err));
   };
 
+  const loadCars = () => {
+    fetch('http://localhost:3000/cars')
+      .then(res => res.json())
+      .then(data => setCars(data))
+      .catch(err => console.error('Ошибка загрузки авто:', err));
+  };
+
   const [applications, setApplications] = useState([]);
   const [staff, setStaff] = useState([]);
   const [stations, setStations] = useState([]);
@@ -82,54 +107,54 @@ function App() {
   const [cars, setCars] = useState([]);
 
   useEffect(() => {
-  const host = 'http://localhost:3000';
+    const host = 'http://localhost:3000';
 
-  loadClients()
-  // Загрузка заявок
-  fetch(`${host}/applications`)
-    .then(res => res.json())
-    .then(data => setApplications(data))
-    .catch(err => console.error('Ошибка заявок:', err));
+    loadClients()
+    // Загрузка заявок
+    fetch(`${host}/applications`)
+      .then(res => res.json())
+      .then(data => setApplications(data))
+      .catch(err => console.error('Ошибка заявок:', err));
 
-  // Загрузка сотрудников
-  fetch(`${host}/staff`)
-    .then(res => res.json())
-    .then(data => setStaff(data.staff))
-    .catch(err => console.error('Ошибка сотрудников:', err));
+    // Загрузка сотрудников
+    fetch(`${host}/staff`)
+      .then(res => res.json())
+      .then(data => setStaff(data.staff))
+      .catch(err => console.error('Ошибка сотрудников:', err));
 
-  // Загрузка филиалов (из logistics.js)
-  fetch(`${host}/logistics/stations`)
-    .then(res => res.json())
-    .then(data => setStations(data))
-    .catch(err => console.error('Ошибка филиалов:', err));
+    // Загрузка филиалов (из logistics.js)
+    fetch(`${host}/logistics/stations`)
+      .then(res => res.json())
+      .then(data => setStations(data))
+      .catch(err => console.error('Ошибка филиалов:', err));
 
-  // Загрузка клиентов
-  fetch(`${host}/clients`)
-    .then(res => res.json())
-    .then(data => setClients(data))
-    .catch(err => console.error('Ошибка клиентов:', err));
+    // Загрузка клиентов
+    fetch(`${host}/clients`)
+      .then(res => res.json())
+      .then(data => setClients(data))
+      .catch(err => console.error('Ошибка клиентов:', err));
 
-  // Загрузка автомобилей
-  fetch(`${host}/cars`)
-    .then(res => res.json())
-    .then(data => setCars(data))
-    .catch(err => console.error('Ошибка автомобилей:', err));
+    // Загрузка автомобилей
+    fetch(`${host}/cars`)
+      .then(res => res.json())
+      .then(data => setCars(data))
+      .catch(err => console.error('Ошибка автомобилей:', err));
 
-  // Загрузка услуг (каталога)
-  fetch(`${host}/catalog`)
-    .then(res => res.json())
-    .then(data => setServices(data))
-    .catch(err => console.error('Ошибка услуг:', err));
+    // Загрузка услуг (каталога)
+    fetch(`${host}/catalog`)
+      .then(res => res.json())
+      .then(data => setServices(data))
+      .catch(err => console.error('Ошибка услуг:', err));
 
-  fetch(`${host}/orders`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.meta && data.meta.statuses) {
-        setStatuses(data.meta.statuses);
-      }
-    })
-    .catch(err => console.error('Ошибка статусов:', err));
-}, []);
+    fetch(`${host}/orders`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.meta && data.meta.statuses) {
+          setStatuses(data.meta.statuses);
+        }
+      })
+      .catch(err => console.error('Ошибка статусов:', err));
+  }, []);
 
   return (
     <div className="app-container">
@@ -138,82 +163,88 @@ function App() {
       ) : (
         <>
           {/* Сайдбар стоял тут первым */}
-          <Sidebar 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-            currentUser={currentUser} 
-            onLogout={() => setCurrentUser(null)} 
+          <Sidebar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            currentUser={currentUser}
+            onLogout={() => setCurrentUser(null)}
           />
 
           <main className="content">
             {/* Шапка стояла внутри main сразу первым элементом */}
-            <Header 
-              activeTab={activeTab} 
-              currentUser={currentUser} 
-              onOpenModal={handleOpenPrimaryModal} 
+            <Header
+              activeTab={activeTab}
+              currentUser={currentUser}
+              onOpenModal={handleOpenPrimaryModal}
             />
-              <section id="view-container">
-                {activeTab === 'dashboard' && (
-                  <div className="dashboard-grid">
-                    <div className="dashboard-card">
-                      <h3>Профиль: {currentUser.name}</h3>
-                      <p>Статус: Постоянный клиент</p>
-                    </div>
-
-                    {currentUser.role === 'client' && (
-                      <>
-                        <div className="dashboard-card highlight">
-                          <h3>В работе</h3>
-                          {/* Считаем ЗН со статусом "В работе" для этого клиента */}
-                          <div className="big-number">2 автомобиля</div>
-                        </div>
-                        <div className="dashboard-card">
-                          <h3>Ваши бонусы</h3>
-                          <p>500 баллов</p>
-                        </div>
-                      </>
-                    )}
+            <section id="view-container">
+              {activeTab === 'dashboard' && (
+                <div className="dashboard-grid">
+                  <div className="dashboard-card">
+                    <h3>Профиль: {currentUser.name}</h3>
+                    <p>Статус: Постоянный клиент</p>
                   </div>
-                )}
 
-                {activeTab === 'work-orders' && (
-                  <WorkOrderTable currentUser={currentUser}/>
-                )}
+                  {currentUser.role === 'client' && (
+                    <>
+                      <div className="dashboard-card highlight">
+                        <h3>В работе</h3>
+                        {/* Считаем ЗН со статусом "В работе" для этого клиента */}
+                        <div className="big-number">2 автомобиля</div>
+                      </div>
+                      <div className="dashboard-card">
+                        <h3>Ваши бонусы</h3>
+                        <p>500 баллов</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
-                {activeTab === 'clients' && (
-                <ClientsTable 
-                  clients={clients} 
+              {activeTab === 'work-orders' && (
+                <WorkOrderTable currentUser={currentUser} />
+              )}
+
+              {activeTab === 'clients' && (
+                <ClientsTable
+                  clients={clients}
                   onEdit={(client) => {
-                  setSelectedClient(client);
-                  setIsClientModalOpen(true);
+                    setSelectedClient(client);
+                    setIsClientModalOpen(true);
                   }}
                 />
-                )}
+              )}
 
-                {activeTab === 'cars' && (
-                  <CarTable currentUser={currentUser} />
-                )}
+              {activeTab === 'cars' && (
+                <CarTable
+                  cars={cars}
+                  onEdit={(car) => {
+                    setSelectedCar(car);
+                    setIsCarModalOpen(true);
+                  }}
+                />
+              )}
 
-                {activeTab === 'applications' && (
-                  <ApplicationTable currentUser={currentUser} />
-                )}
-                {activeTab === 'staff' && (
-                  <StaffTable/>
-                )}
-                {activeTab === 'service-stations' && (
-                  <ServiceStationsTable/>
-                )}
-                {activeTab === 'service-catalog' && (
-                  <ServiceTable />
-                )}
-                {activeTab === 'vendors' && (
-                  <VendorsTable/>
-                )}
-                {activeTab === 'contracts' && (
-                  <SparePartsContractsTable/>
-                )}
-              </section>
-            </main>
+              {activeTab === 'applications' && (
+                <ApplicationTable currentUser={currentUser} />
+              )}
+              {activeTab === 'staff' && (
+                <StaffTable />
+              )}
+              {activeTab === 'service-stations' && (
+                <ServiceStationsTable />
+              )}
+              {activeTab === 'service-catalog' && (
+                <ServiceTable />
+              )}
+              {activeTab === 'vendors' && (
+                <VendorsTable />
+              )}
+              {activeTab === 'contracts' && (
+                <SparePartsContractsTable />
+              )}
+            </section>
+          </main>
 
           <WorkOrderModal
             isOpen={isModalOpen}
@@ -226,19 +257,26 @@ function App() {
             clients={clients}
             cars={cars}
           />
-          <WorkOrderDetailsModal 
+          <WorkOrderDetailsModal
             isOpen={isDetailsOpen}
             onClose={() => {
-            setIsDetailsOpen(false);
-            loadOrders(); 
+              setIsDetailsOpen(false);
+              loadOrders();
             }}
             orderId={selectedOrderId}
           />
-          <ClientModal 
-            isOpen={isClientModalOpen} 
-            onClose={() => setIsClientModalOpen(false)} 
-            clientToEdit={selectedClient} 
+          <ClientModal
+            isOpen={isClientModalOpen}
+            onClose={() => setIsClientModalOpen(false)}
+            clientToEdit={selectedClient}
             onRefresh={loadClients}
+          />
+          <CarModal
+            isOpen={isCarModalOpen}
+            onClose={() => setIsCarModalOpen(false)}
+            carToEdit={selectedCar}
+            onRefresh={loadCars}
+            clients={clients}
           />
         </>
       )}
