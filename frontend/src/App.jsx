@@ -10,6 +10,7 @@ import WorkOrderDetailsModal from './components/modals/WorkOrderDetailsModal';
 import ClientModal from './components/modals/ClientModal';
 import CarModal from './components/modals/CarModal';
 import ApplicationModal from './components/modals/ApplicationModal';
+import VendorModal from './components/modals/VendorModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -57,6 +58,10 @@ function App() {
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
 
+  const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState(null);
+
+
   const handleOpenPrimaryModal = () => {
     switch (activeTab) {
       case 'work-orders':
@@ -73,6 +78,10 @@ function App() {
       case 'applications':
         setSelectedApplication(null);
         setIsAppModalOpen(true);
+        break;
+      case 'vendors':
+        setSelectedVendor(null);
+        setIsVendorModalOpen(true);
         break;
       default:
         console.warn(`Нет обработчика создания для вкладки: ${activeTab}`);
@@ -108,6 +117,13 @@ function App() {
       .catch(err => console.error('Ошибка заявок:', err));
   }
 
+  const loadVendors = () => {
+    fetch('http://localhost:3000/logistics/vendors')
+      .then(res => res.json())
+      .then(data => setVendors(data))
+      .catch(err => console.error('Ошибка загрузки поставщиков:', err));
+  };
+
   const [applications, setApplications] = useState([]);
   const [staff, setStaff] = useState([]);
   const [stations, setStations] = useState([]);
@@ -115,17 +131,16 @@ function App() {
   const [services, setServices] = useState([]);
   const [clients, setClients] = useState([]);
   const [cars, setCars] = useState([]);
+  const [vendors, setVendors] = useState([]);
 
   useEffect(() => {
     const host = 'http://localhost:3000';
 
     loadClients()
-    // Загрузка заявок
-    fetch(`${host}/applications`)
-      .then(res => res.json())
-      .then(data => setApplications(data))
-      .catch(err => console.error('Ошибка заявок:', err));
-
+    loadCars();
+    loadApplications();
+    loadVendors();
+    
     // Загрузка сотрудников
     fetch(`${host}/staff`)
       .then(res => res.json())
@@ -137,18 +152,6 @@ function App() {
       .then(res => res.json())
       .then(data => setStations(data))
       .catch(err => console.error('Ошибка филиалов:', err));
-
-    // Загрузка клиентов
-    fetch(`${host}/clients`)
-      .then(res => res.json())
-      .then(data => setClients(data))
-      .catch(err => console.error('Ошибка клиентов:', err));
-
-    // Загрузка автомобилей
-    fetch(`${host}/cars`)
-      .then(res => res.json())
-      .then(data => setCars(data))
-      .catch(err => console.error('Ошибка автомобилей:', err));
 
     // Загрузка услуг (каталога)
     fetch(`${host}/catalog`)
@@ -254,7 +257,13 @@ function App() {
                 <ServiceTable />
               )}
               {activeTab === 'vendors' && (
-                <VendorsTable />
+                <VendorsTable
+                  vendors={vendors}
+                  onEdit={(v) => {
+                    setSelectedVendor(v);
+                    setIsVendorModalOpen(true);
+                  }}
+                />
               )}
               {activeTab === 'contracts' && (
                 <SparePartsContractsTable />
@@ -299,8 +308,14 @@ function App() {
             onClose={() => setIsAppModalOpen(false)}
             applicationToEdit={selectedApplication}
             onRefresh={loadApplications}
-            cars={cars}     
-            staff={staff} 
+            cars={cars}
+            staff={staff}
+          />
+          <VendorModal
+            isOpen={isVendorModalOpen}
+            onClose={() => setIsVendorModalOpen(false)}
+            vendorToEdit={selectedVendor}
+            onRefresh={loadVendors}
           />
         </>
       )}

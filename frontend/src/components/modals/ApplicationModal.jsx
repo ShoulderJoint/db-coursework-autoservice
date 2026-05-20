@@ -5,9 +5,6 @@ const ApplicationModal = ({ isOpen, onClose, applicationToEdit, onRefresh, cars,
         carId: '', staffId: '', description: ''
     });
 
-    console.log("Данные для редактирования:", applicationToEdit);
-    console.log("Список машин:", cars);
-
     useEffect(() => {
         if (applicationToEdit) {
             setFormData({

@@ -62,6 +62,31 @@ export const Header = ({ activeTab, onOpenModal, currentUser }) => (
             + Добавить авто
           </button>
         )}
+        {activeTab === 'vendors' && currentUser?.role === 'advisor' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Добавить поставщика
+          </button>
+        )}
+        {activeTab === 'contracts' && currentUser?.role === 'advisor' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Добавить договор
+          </button>
+        )}
+        {activeTab === 'staff' && currentUser?.role === 'root' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Добавить работника
+          </button>
+        )}
+        {activeTab === 'service-stations' && currentUser?.role === 'root' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Добавить филиал
+          </button>
+        )}
+        {activeTab === 'service-catalog' && currentUser?.role === 'root' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Добавить услугу
+          </button>
+        )}
     </div>
   </header>
 );

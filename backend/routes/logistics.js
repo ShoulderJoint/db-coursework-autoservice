@@ -20,6 +20,34 @@ router.get('/vendors', async (req, res) => {
     }
 });
 
+router.post('/vendors', async (req, res) => {
+    const { name, region, city, street, house, flat, postcode, inn, phone } = req.body;
+    try {
+        await db.none(`
+            INSERT INTO vendors (name, region, city, street, house, flat, postcode, inn, phone)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `, [name, region, city, street, house, flat || null, postcode || null, inn, phone || null]);
+        res.status(201).json({ message: 'Поставщик добавлен' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Обновление поставщика
+router.put('/vendors/:id', async (req, res) => {
+    const { name, region, city, street, house, flat, postcode, inn, phone } = req.body;
+    try {
+        await db.none(`
+            UPDATE vendors 
+            SET name = $1, region = $2, city = $3, street = $4, house = $5, flat = $6, postcode = $7, inn = $8, phone = $9
+            WHERE id = $10
+        `, [name, region, city, street, house, flat || null, postcode || null, inn, phone || null, req.params.id]);
+        res.json({ message: 'Данные поставщика обновлены' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.get('/partscontracts', async (req, res) => {
     try {
         const partsContracts = await db.any(`
