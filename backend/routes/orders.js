@@ -131,7 +131,26 @@ router.get('/:id/parts', async (req, res) => {
         res.status(500).json({ error: "Ошибка получения запчастей" });
     }
 });
+// POST: Добавление запчасти в существующий ЗН
+router.post('/:id/parts', async (req, res) => {
+    const workOrderId = req.params.id; // Берем ID заказ-наряда из URL
+    const { sparePartId, count, cost } = req.body; // Получаем данные от фронтенда
 
+    try {
+        // Делаем простую вставку. 
+        // Триггер trg_update_costs_parts сработает сам и пересчитает сумму ЗН!
+        await db.none(`
+            INSERT INTO order_parts (work_order_id, spare_part_id, count, cost)
+            VALUES ($1, $2, $3, $4)
+        `, [workOrderId, sparePartId, count, cost]);
+
+        res.status(201).json({ message: "Комплектующее успешно добавлено" });
+    } catch (error) {
+        console.error('Ошибка добавления запчасти:', error);
+        // Если ЗН закрыт, наш триггер блокировки выкинет ошибку, и мы передадим её на фронт
+        res.status(403).json({ error: error.message || "Ошибка при сохранении" });
+    }
+});
 // Получение услуг конкретного ЗН
 router.get('/:id/services', async (req, res) => {
     try {

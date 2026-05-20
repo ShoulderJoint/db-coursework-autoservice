@@ -6,6 +6,7 @@ import {
   MOCK_SPARE_PARTS_CONTRACT_ITEMS
 } from './data/mockData';
 import WorkOrderModal from './components/modals/WorkOrderModal';
+import WorkOrderDetailsModal from './components/modals/WorkOrderDetailsModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -40,6 +41,9 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
 
 
 
@@ -195,6 +199,14 @@ function App() {
             services={services}
             clients={clients}
             cars={cars}
+          />
+          <WorkOrderDetailsModal 
+            isOpen={isDetailsOpen}
+            onClose={() => {
+            setIsDetailsOpen(false);
+            loadOrders(); 
+            }}
+            orderId={selectedOrderId}
           />
         </>
       )}

@@ -10,5 +10,13 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+router.get('/parts', async (req, res) => {
+    try {
+        const parts = await db.any('SELECT id, name FROM parts_contract_items ORDER BY name');
+        res.json(parts);
+    } catch (error) {
+        res.status(500).json({ error: "Ошибка получения каталога запчастей" });
+    }
+});
 
 module.exports = router;
