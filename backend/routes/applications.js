@@ -12,6 +12,8 @@ router.get('/', async (req, res) => {
             applications = await db.any(`
                 SELECT 
                     a.id,
+                    a.car_id,
+                    a.staff_id,
                     c.brand,
                     c.model,
                     c.production_year,
@@ -36,6 +38,8 @@ router.get('/', async (req, res) => {
             applications = await db.any(`
                 SELECT 
                     a.id,
+                    a.car_id,
+                    a.staff_id,
                     cl.patronymic as client_patronymic,
                     cl.name as client_name,
                     cl.surname as client_surname,
@@ -61,6 +65,33 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Ошибка получения автопарка" });
+    }
+});
+
+router.post('/', async (req, res) => {
+    const { carId, staffId, description } = req.body;
+    try {
+        await db.none(`
+            INSERT INTO applications (car_id, staff_id, description, created_at)
+            VALUES ($1, $2, $3, NOW())
+        `, [carId, staffId, description]);
+        res.status(201).json({ message: 'Заявка создана' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.put('/:id', async (req, res) => {
+    const { carId, staffId, description } = req.body;
+    try {
+        await db.none(`
+            UPDATE applications 
+            SET car_id = $1, staff_id = $2, description = $3
+            WHERE id = $4
+        `, [carId, staffId, description, req.params.id]);
+        res.json({ message: 'Заявка обновлена' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 

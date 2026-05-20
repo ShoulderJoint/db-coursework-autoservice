@@ -9,6 +9,7 @@ import WorkOrderModal from './components/modals/WorkOrderModal';
 import WorkOrderDetailsModal from './components/modals/WorkOrderDetailsModal';
 import ClientModal from './components/modals/ClientModal';
 import CarModal from './components/modals/CarModal';
+import ApplicationModal from './components/modals/ApplicationModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -53,13 +54,16 @@ function App() {
   const [isCarModalOpen, setIsCarModalOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
 
+  const [isAppModalOpen, setIsAppModalOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+
   const handleOpenPrimaryModal = () => {
     switch (activeTab) {
       case 'work-orders':
         setIsModalOpen(true);
         break;
       case 'clients':
-        setSelectedClient(null); 
+        setSelectedClient(null);
         setIsClientModalOpen(true);
         break;
       case 'cars':
@@ -67,9 +71,8 @@ function App() {
         setIsCarModalOpen(true);
         break;
       case 'applications':
-        // Задел на следующий шаг
-        // setSelectedApplication(null);
-        // setIsAppModalOpen(true);
+        setSelectedApplication(null);
+        setIsAppModalOpen(true);
         break;
       default:
         console.warn(`Нет обработчика создания для вкладки: ${activeTab}`);
@@ -97,6 +100,13 @@ function App() {
       .then(data => setCars(data))
       .catch(err => console.error('Ошибка загрузки авто:', err));
   };
+
+  const loadApplications = () => {
+    fetch('http://localhost:3000/applications')
+      .then(res => res.json())
+      .then(data => setApplications(data))
+      .catch(err => console.error('Ошибка заявок:', err));
+  }
 
   const [applications, setApplications] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -226,7 +236,13 @@ function App() {
               )}
 
               {activeTab === 'applications' && (
-                <ApplicationTable currentUser={currentUser} />
+                <ApplicationTable
+                  applications={applications}
+                  onEdit={(app) => {
+                    setSelectedApplication(app);
+                    setIsAppModalOpen(true);
+                  }}
+                />
               )}
               {activeTab === 'staff' && (
                 <StaffTable />
@@ -277,6 +293,14 @@ function App() {
             carToEdit={selectedCar}
             onRefresh={loadCars}
             clients={clients}
+          />
+          <ApplicationModal
+            isOpen={isAppModalOpen}
+            onClose={() => setIsAppModalOpen(false)}
+            applicationToEdit={selectedApplication}
+            onRefresh={loadApplications}
+            cars={cars}     
+            staff={staff} 
           />
         </>
       )}

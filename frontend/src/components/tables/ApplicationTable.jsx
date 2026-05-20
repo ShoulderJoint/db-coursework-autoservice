@@ -1,76 +1,44 @@
 import React, { useState, useEffect } from 'react';
 
-const ApplicationTable = ({ currentUser }) => {
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
+const ApplicationTable = ({ applications, onEdit }) => {
+  if (!applications) return <p>Загрузка данных из БД...</p>;
+  if (applications.length === 0) return <p>Заявок пока нет.</p>;
 
-  useEffect(() => {
-    const role = currentUser?.role;
-    const userId = currentUser?.personId || currentUser?.id;
-
-    // Запрос к серверу с передачей роли и ID текущего пользователя
-    fetch(`http://localhost:3000/applications?role=${role}&userId=${userId}`)
-      .then(res => res.json())
-      .then(data => {
-        setApplications(data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Ошибка при загрузке заявок:', err);
-        setLoading(false);
-      });
-  }, [currentUser]);
-
-  if (loading) return <p>Загрузка списка заявок...</p>;
-
-  // Форматирование даты в привычный вид (ДД.ММ.ГГГГ)
+  // Форматирование даты
   const formatDate = (dateString) => {
     if (!dateString) return '—';
     const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU');
+    return date.toLocaleString('ru-RU');
   };
-
-  // Сборка ФИО из отдельных полей с обработкой пустых значений отчества
-  const formatFullName = (surname, name, patronymic) => {
-    if (!surname && !name) return 'Не назначен';
-    return `${surname || ''} ${name || ''} ${patronymic || ''}`.trim().replace(/\s+/g, ' ');
-  };
-
-  const isClient = currentUser?.role === 'client';
 
   return (
-    <table className="data-table">
+    <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
-        <tr>
+        <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
           <th>ID</th>
-          <th>Дата</th>
-          {!isClient && <th>Клиент</th>}
           <th>Автомобиль</th>
-          <th>Гос. номер</th>
-          <th>Описание проблемы</th>
-          <th>Принял сотрудник</th>
+          <th>Администратор</th>
+          <th>Описание</th>
+          <th>Дата создания</th>
+          <th>Действия</th>
         </tr>
       </thead>
       <tbody>
         {applications.map(app => (
-          <tr key={app.id}>
+          <tr key={app.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
             <td>{app.id}</td>
+            <td>{app.brand} {app.model} ({app.reg_number})</td>
+            <td>{`${app.staff_surname || ''} ${app.staff_name || ''}`.trim()}</td>
+            <td>{app.description}</td>
             <td>{formatDate(app.created_at)}</td>
-            
-            {/* Колонка клиента отображается только для персонала */}
-            {!isClient && (
-              <td>
-                {formatFullName(app.client_surname, app.client_name, app.client_patronymic)}
-              </td>
-            )}
-            
             <td>
-              {`${app.brand} ${app.model} (${app.production_year} г.)`}
-            </td>
-            <td>{app.reg_number}</td>
-            <td>{app.description || 'Нет описания'}</td>
-            <td>
-              {formatFullName(app.staff_surname, app.staff_name, app.staff_patronymic)}
+              <button 
+                className="btn-primary" 
+                style={{ padding: '6px 12px', cursor: 'pointer' }}
+                onClick={() => onEdit(app)}
+              >
+                Редактировать
+              </button>
             </td>
           </tr>
         ))}
