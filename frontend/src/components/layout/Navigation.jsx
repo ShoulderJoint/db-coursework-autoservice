@@ -45,6 +45,23 @@ export const Header = ({ activeTab, onOpenModal, currentUser }) => (
           + Создать ЗН
         </button>
       )}
+        {activeTab === 'clients' && currentUser?.role === 'admin' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Добавить клиента
+          </button>
+        )}
+
+        {activeTab === 'applications' && currentUser?.role === 'admin' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Создать заявку
+          </button>
+        )}
+
+        {activeTab === 'cars' && currentUser?.role === 'admin' && (
+          <button className="btn-primary" onClick={onOpenModal}>
+            + Добавить авто
+          </button>
+        )}
     </div>
   </header>
 );

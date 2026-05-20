@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-const ClientsTable = () => {
-    const [clients, setClients] = useState([]);
-    const [loading, setLoading] = useState(true);
+const ClientsTable = ({ clients, onEdit }) => {
 
-    useEffect(() => {
-        fetch('http://localhost:3000/clients')
-            .then(res => res.json())
-            .then(data => {
-                setClients(data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Ошибка загрузки базы клиентов:', err);
-                setLoading(false);
-            });
-    }, []);
-
-    if (loading) return <p>Загрузка данных из БД...</p>;
-
+    if (!clients || clients.length === 0) {
+    return <p>Клиентов пока нет. Добавьте первого!</p>;
+    }
+    
     return (
         <table className="data-table">
             <thead>

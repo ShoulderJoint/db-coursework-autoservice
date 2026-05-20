@@ -4,44 +4,110 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
   const [services, setServices] = useState([]);
   const [parts, setParts] = useState([]);
   const [catalogParts, setCatalogParts] = useState([]);
+  const [catalogServices, setCatalogServices] = useState([]);
+  const [statuses, setStatuses] = useState([]);
+  const [currentStatusId, setCurrentStatusId] = useState('');
   
-  // Состояние для формы добавления запчасти
+  // Состояния для форм добавления позиций
   const [newPart, setNewPart] = useState({ sparePartId: '', count: 1, cost: 0 });
+  const [newService, setNewService] = useState({ serviceId: '', count: 1, coeff: 1, cost: 0 });
 
   useEffect(() => {
     if (isOpen && orderId) {
       loadOrderData();
-      loadCatalogParts();
+      loadCatalogData();
     }
   }, [isOpen, orderId]);
 
   const loadOrderData = async () => {
     try {
-      // Загружаем услуги этого ЗН
+      // Текущие услуги ЗН
       const resServices = await fetch(`http://localhost:3000/orders/${orderId}/services`);
-      const dataServices = await resServices.json();
-      setServices(dataServices);
+      setServices(await resServices.json());
 
-      // Загружаем запчасти этого ЗН
+      // Текущие запчасти ЗН
       const resParts = await fetch(`http://localhost:3000/orders/${orderId}/parts`);
-      const dataParts = await resParts.json();
-      setParts(dataParts);
+      setParts(await resParts.json());
+
+      // Данные самого ЗН (узнаем статус)
+      const resOrder = await fetch(`http://localhost:3000/orders/${orderId}`);
+      const orderData = await resOrder.json();
+      setCurrentStatusId(orderData.status_id);
     } catch (err) {
-      console.error('Ошибка загрузки данных ЗН:', err);
+      console.error('Ошибка загрузки данных заказ-наряда:', err);
     }
   };
 
-  const loadCatalogParts = () => {
-    // Вызываем роут, который ты добавил в шаге 2
-    fetch('http://localhost:3000/catalog/parts') 
-      .then(res => res.json())
-      .then(data => setCatalogParts(data))
-      .catch(err => console.error(err));
+  const loadCatalogData = async () => {
+    try {
+      const resParts = await fetch('http://localhost:3000/catalog/parts');
+      setCatalogParts(await resParts.json());
+
+      const resServices = await fetch('http://localhost:3000/catalog');
+      setCatalogServices(await resServices.json());
+
+      const resStatuses = await fetch('http://localhost:3000/orders/statuses');
+      setStatuses(await resStatuses.json());
+    } catch (err) {
+      console.error('Ошибка загрузки каталогов:', err);
+    }
   };
 
+  // Смена статуса документа
+  const handleStatusChange = async (newStatusId) => {
+    try {
+      const response = await fetch(`http://localhost:3000/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ statusId: parseInt(newStatusId) })
+      });
+
+      if (response.ok) {
+        setCurrentStatusId(newStatusId);
+        alert('Статус успешно изменен!');
+      } else {
+        const err = await response.json();
+        alert(`Ошибка: ${err.error}`);
+      }
+    } catch (error) {
+      alert('Не удалось изменить статус на сервере');
+    }
+  };
+
+  // Сохранение новой услуги
+  const handleAddService = async (e) => {
+    e.preventDefault();
+    if (!newService.serviceId) return alert('Выберите услугу');
+
+    try {
+      const response = await fetch(`http://localhost:3000/orders/${orderId}/services`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          serviceId: parseInt(newService.serviceId),
+          count: newService.count,
+          coefficient: newService.coeff,
+          cost: newService.cost
+        })
+      });
+
+      if (response.ok) {
+        alert('Работа успешно добавлена!');
+        setNewService({ serviceId: '', count: 1, coeff: 1, cost: 0 });
+        loadOrderData(); // СУБД пересчитает итоговую сумму сама
+      } else {
+        const err = await response.json();
+        alert(`Ошибка: ${err.error}`);
+      }
+    } catch (error) {
+      alert('Ошибка добавления работы');
+    }
+  };
+
+  // Сохранение новой запчасти
   const handleAddPart = async (e) => {
     e.preventDefault();
-    if (!newPart.sparePartId) return alert('Выберите запчасть');
+    if (!newPart.sparePartId) return alert('Выберите деталь');
 
     try {
       const response = await fetch(`http://localhost:3000/orders/${orderId}/parts`, {
@@ -51,69 +117,129 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
       });
 
       if (response.ok) {
-        alert('Запчасть добавлена!');
+        alert('Комплектующее добавлено!');
         setNewPart({ sparePartId: '', count: 1, cost: 0 });
-        loadOrderData(); // Перезагружаем списки, триггер в БД уже пересчитал суммы!
+        loadOrderData();
       } else {
         const err = await response.json();
         alert(`Ошибка: ${err.error}`);
       }
     } catch (error) {
-      alert('Ошибка соединения с сервером');
+      alert('Ошибка добавления детали');
     }
+  };
+
+  // Хелперы расчета стоимости услуги при изменении полей
+  const handleServiceSelect = (serviceId) => {
+    const selected = catalogServices.find(s => String(s.id) === String(serviceId));
+    const basePrice = selected ? parseFloat(selected.price) : 0;
+    setNewService({ ...newService, serviceId, cost: basePrice * newService.count * newService.coeff });
+  };
+
+  const handleServiceParamChange = (field, value) => {
+    const updated = { ...newService, [field]: value };
+    const selected = catalogServices.find(s => String(s.id) === String(updated.serviceId));
+    const basePrice = selected ? parseFloat(selected.price) : 0;
+    updated.cost = basePrice * updated.count * updated.coeff;
+    setNewService(updated);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="modal" style={{ display: 'flex', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-      <div className="modal-content" style={{ maxWidth: '700px', width: '100%', backgroundColor: '#fff', padding: '20px', borderRadius: '8px', maxHeight: '90vh', overflowY: 'auto' }}>
-        <h2>Заказ-наряд №{orderId} (Просмотр и дефектовка)</h2>
+      <div className="modal-content" style={{ maxWidth: '850px', width: '100%', backgroundColor: '#fff', padding: '25px', borderRadius: '8px', maxHeight: '90vh', overflowY: 'auto' }}>
         
-        <h3>Выполненные работы / Услуги</h3>
-        <ul>
-          {services.map(s => (
-            <li key={s.id}>{s.name} — {s.count} шт. x {s.cost} руб.</li>
-          ))}
-        </ul>
-
-        <h3>Установленные комплектующие</h3>
-        {parts.length === 0 ? <p>Запчасти еще не добавлялись</p> : (
-          <ul>
-            {parts.map(p => (
-              <li key={p.id}>{p.name} — {p.count} шт. ({parseFloat(p.cost).toFixed(2)} руб.)</li>
+        {/* Панель управления шапки */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #f1f5f9', paddingBottom: '15px' }}>
+          <h2 style={{ margin: 0 }}>Заказ-наряд №{orderId}</h2>
+          <div>
+            <label style={{ marginRight: '10px', fontWeight: 'bold' }}>Текущий статус:</label>
+            <select 
+              value={currentStatusId} 
+              onChange={(e) => handleStatusChange(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #cbd5e1', fontWeight: '500' }}
+            >
+              {statuses.map(st => (
+                <option key={st.id} value={st.id}>{st.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
+        {/* БЛОК РАБОТ И УСЛУГ */}
+        <h3 style={{ margin: '15px 0 10px 0' }}>Выполняемые работы</h3>
+        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
+              <th style={{ padding: '8px' }}>Наименование услуги</th>
+              <th>Кол-во</th>
+              <th>Коэффициент</th>
+              <th>Сумма</th>
+            </tr>
+          </thead>
+          <tbody>
+            {services.map(s => (
+              <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '8px' }}>{s.name}</td>
+                <td>{s.count} шт.</td>
+                <td>{s.coefficient}</td>
+                <td>{parseFloat(s.cost).toLocaleString('ru-RU')} руб.</td>
+              </tr>
             ))}
-          </ul>
-        )}
+          </tbody>
+        </table>
 
-        <h4 style={{ marginTop: '20px' }}>Добавить запчасть из склада:</h4>
-        <form onSubmit={handleAddPart} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-          <select 
-            value={newPart.sparePartId} 
-            onChange={(e) => setNewPart({...newPart, sparePartId: e.target.value})}
-            style={{ padding: '5px', flex: 2 }}
-          >
-            <option value="">-- Выберите деталь --</option>
-            {catalogParts.map(cp => <option key={cp.id} value={cp.id}>{cp.name}</option>)}
+        {/* Форма новой услуги */}
+        <form onSubmit={handleAddService} style={{ display: 'flex', gap: '10px', marginBottom: '30px', background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <select value={newService.serviceId} onChange={(e) => handleServiceSelect(e.target.value)} style={{ flex: 3, padding: '6px' }}>
+            <option value="">-- Добавить работу/операцию --</option>
+            {catalogServices.map(cs => <option key={cs.id} value={cs.id}>{cs.name} ({cs.price} руб.)</option>)}
           </select>
-          <input 
-            type="number" 
-            placeholder="Кол-во" 
-            value={newPart.count} 
-            onChange={(e) => setNewPart({...newPart, count: parseInt(e.target.value)})} 
-            style={{ width: '60px', padding: '5px' }}
-          />
-          <input 
-            type="number" 
-            placeholder="Цена" 
-            value={newPart.cost} 
-            onChange={(e) => setNewPart({...newPart, cost: parseFloat(e.target.value)})} 
-            style={{ width: '90px', padding: '5px' }}
-          />
-          <button type="submit" style={{ padding: '5px 10px', backgroundColor: '#28a745', color: '#fff', border: 'none', borderRadius: '4px' }}>+</button>
+          <input type="number" placeholder="Кол-во" min="1" value={newService.count} onChange={(e) => handleServiceParamChange('count', parseInt(e.target.value) || 1)} style={{ width: '65px', padding: '6px' }} />
+          <input type="number" placeholder="Коэфф." step="0.1" min="0.1" value={newService.coeff} onChange={(e) => handleServiceParamChange('coeff', parseFloat(e.target.value) || 1)} style={{ width: '65px', padding: '6px' }} />
+          <input type="text" value={`${newService.cost.toFixed(2)} руб.`} readOnly style={{ width: '110px', padding: '6px', backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', textAlign: 'center', borderRadius: '4px' }} />
+          <button type="submit" style={{ padding: '6px 14px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+</button>
         </form>
 
-        <button type="button" onClick={onClose} style={{ padding: '10px 20px', cursor: 'pointer' }}>Закрыть</button>
+        {/* БЛОК КОМПЛЕКТУЮЩИХ */}
+        <h3 style={{ margin: '15px 0 10px 0' }}>Установленные комплектующие</h3>
+        <table style={{ width: '100%', marginBottom: '10px', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>
+              <th style={{ padding: '8px' }}>Наименование детали</th>
+              <th>Количество</th>
+              <th>Сумма</th>
+            </tr>
+          </thead>
+          <tbody>
+            {parts.length === 0 ? (
+              <tr><td colSpan="3" style={{ padding: '10px', color: '#64748b', italic: 'true' }}>Детали пока не добавлялись</td></tr>
+            ) : parts.map(p => (
+              <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <td style={{ padding: '8px' }}>{p.name}</td>
+                <td>{p.count} шт.</td>
+                <td>{parseFloat(p.cost).toLocaleString('ru-RU')} руб.</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Форма новой запчасти */}
+        <form onSubmit={handleAddPart} style={{ display: 'flex', gap: '10px', marginBottom: '20px', background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+          <select value={newPart.sparePartId} onChange={(e) => setNewPart({...newPart, sparePartId: e.target.value})} style={{ flex: 3, padding: '6px' }}>
+            <option value="">-- Добавить деталь со склада --</option>
+            {catalogParts.map(cp => <option key={cp.id} value={cp.id}>{cp.name}</option>)}
+          </select>
+          <input type="number" placeholder="Кол-во" min="1" value={newPart.count} onChange={(e) => setNewPart({...newPart, count: parseInt(e.target.value) || 1})} style={{ width: '65px', padding: '6px' }} />
+          <input type="number" placeholder="Цена" value={newPart.cost} onChange={(e) => setNewPart({...newPart, cost: parseFloat(e.target.value) || 0})} style={{ width: '100px', padding: '6px' }} />
+          <button type="submit" style={{ padding: '6px 14px', backgroundColor: '#16a34a', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+</button>
+        </form>
+
+        {/* Подвал */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '25px', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>
+          <button type="button" onClick={onClose} style={{ padding: '8px 24px', cursor: 'pointer', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff' }}>Закрыть</button>
+        </div>
       </div>
     </div>
   );

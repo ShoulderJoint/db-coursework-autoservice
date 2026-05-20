@@ -118,6 +118,50 @@ router.post('/', async (req, res) => {
         res.status(500).json({ error: "Ошибка при сохранении в базу данных" });
     }
 });
+router.get('/statuses', async (req, res) => {
+    try {
+        const statuses = await db.any('SELECT id, name FROM order_statuses ORDER BY id');
+        res.json(statuses);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. Получение базовой информации о ЗН (чтобы узнать его текущий статус)
+router.get('/:id', async (req, res) => {
+    try {
+        const order = await db.one('SELECT id, status_id FROM orders WHERE id = $1', [req.params.id]);
+        res.json(order);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+router.put('/:id/status', async (req, res) => {
+    const workOrderId = req.params.id;
+    const { statusId } = req.body;
+    try {
+        await db.none('UPDATE orders SET status_id = $1 WHERE id = $2', [statusId, workOrderId]);
+        res.json({ message: "Статус успешно обновлен" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message || "Ошибка обновления статуса" });
+    }
+});
+router.post('/:id/services', async (req, res) => {
+    const workOrderId = req.params.id;
+    const { serviceId, count, coefficient, cost } = req.body;
+    try {
+        await db.none(`
+            INSERT INTO order_service (work_order_id, service_id, count, coefficient, cost)
+            VALUES ($1, $2, $3, $4, $5)
+        `, [workOrderId, serviceId, count, coefficient || 1.0, cost]);
+        res.status(201).json({ message: "Услуга добавлена" });
+    } catch (error) {
+        console.error(error);
+        // Если ЗН заблокирован триггером check_closed_order_lock, вернется ошибка 403
+        res.status(403).json({ error: error.message || "Ошибка добавления услуги" });
+    }
+});
 router.get('/:id/parts', async (req, res) => {
     try {
         const parts = await db.any(`

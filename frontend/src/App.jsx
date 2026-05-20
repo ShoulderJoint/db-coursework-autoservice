@@ -7,6 +7,7 @@ import {
 } from './data/mockData';
 import WorkOrderModal from './components/modals/WorkOrderModal';
 import WorkOrderDetailsModal from './components/modals/WorkOrderDetailsModal';
+import ClientModal from './components/modals/ClientModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -45,13 +46,31 @@ function App() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
 
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
 
+  const handleOpenPrimaryModal = () => {
+    if (activeTab === 'work-orders') {
+      setIsModalOpen(true);
+    } else if (activeTab === 'clients') {
+      setSelectedClient(null); 
+      setIsClientModalOpen(true); 
+    }
+    // Позже добавим сюда if (activeTab === 'applications') и т.д.
+  };
 
   // Управление вкладками
   const handleTabClick = (tab) => setActiveTab(tab);
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
+  };
+
+  const loadClients = () => {
+    fetch('http://localhost:3000/clients')
+      .then(res => res.json())
+      .then(data => setClients(data))
+      .catch(err => console.error('Ошибка клиентов:', err));
   };
 
   const [applications, setApplications] = useState([]);
@@ -65,6 +84,7 @@ function App() {
   useEffect(() => {
   const host = 'http://localhost:3000';
 
+  loadClients()
   // Загрузка заявок
   fetch(`${host}/applications`)
     .then(res => res.json())
@@ -130,7 +150,7 @@ function App() {
             <Header 
               activeTab={activeTab} 
               currentUser={currentUser} 
-              onOpenModal={() => setIsModalOpen(true)} 
+              onOpenModal={handleOpenPrimaryModal} 
             />
               <section id="view-container">
                 {activeTab === 'dashboard' && (
@@ -161,7 +181,13 @@ function App() {
                 )}
 
                 {activeTab === 'clients' && (
-                 <ClientsTable/>
+                <ClientsTable 
+                  clients={clients} 
+                  onEdit={(client) => {
+                  setSelectedClient(client);
+                  setIsClientModalOpen(true);
+                  }}
+                />
                 )}
 
                 {activeTab === 'cars' && (
@@ -207,6 +233,12 @@ function App() {
             loadOrders(); 
             }}
             orderId={selectedOrderId}
+          />
+          <ClientModal 
+            isOpen={isClientModalOpen} 
+            onClose={() => setIsClientModalOpen(false)} 
+            clientToEdit={selectedClient} 
+            onRefresh={loadClients}
           />
         </>
       )}
