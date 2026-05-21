@@ -34,6 +34,33 @@ router.get('/stations', async (req, res) => {
     }
 });
 
+router.post('/stations', async (req, res) => {
+    const {region, city, street, house, phone } = req.body;
+    try {
+        await db.none(`
+            INSERT INTO stations (region, city, street, house, phone)
+            VALUES ($1, $2, $3, $4, $5)
+        `, [region, city, street, house, phone]);
+        res.status(201).json({ message: 'Филиал успешно добавлен' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.put('/stations/:id', async (req, res) => {
+    const {region, city, street, house, phone } = req.body;
+    try {
+        await db.none(`
+            UPDATE stations 
+            SET region = $1, city = $2, street = $3, house = $4, phone=$5
+            WHERE id = $6
+        `, [region, city, street, house, phone, req.params.id]);
+        res.json({ message: 'Данные филиала обновлены' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.get('/vendors', async (req, res) => {
     try {
         const vendors = await db.any('SELECT * FROM vendors');
