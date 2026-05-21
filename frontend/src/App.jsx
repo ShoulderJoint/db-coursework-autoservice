@@ -11,6 +11,7 @@ import ClientModal from './components/modals/ClientModal';
 import CarModal from './components/modals/CarModal';
 import ApplicationModal from './components/modals/ApplicationModal';
 import VendorModal from './components/modals/VendorModal';
+import ContractModal from './components/modals/ContractModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -21,7 +22,7 @@ import ApplicationTable from './components/tables/ApplicationTable';
 import StaffTable from './components/tables/StaffTable';
 import ServiceStationsTable from './components/tables/ServiceStations';
 import VendorsTable from './components/tables/VendorsTable';
-import SparePartsContractsTable from './components/tables/SparePartsContractsTable';
+import PartsContractsTable from './components/tables/SparePartsContractsTable';
 
 /*├── data/
 │ └── mockData.js // Все наши массивы (MOCK_CLIENTS, MOCK_CARS и т.д.)
@@ -61,6 +62,9 @@ function App() {
   const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
 
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [contracts, setContracts] = useState([]);
+
 
   const handleOpenPrimaryModal = () => {
     switch (activeTab) {
@@ -82,6 +86,9 @@ function App() {
       case 'vendors':
         setSelectedVendor(null);
         setIsVendorModalOpen(true);
+        break;
+      case 'contracts':
+        setIsContractModalOpen(true);
         break;
       default:
         console.warn(`Нет обработчика создания для вкладки: ${activeTab}`);
@@ -124,6 +131,13 @@ function App() {
       .catch(err => console.error('Ошибка загрузки поставщиков:', err));
   };
 
+  const loadContracts = () => {
+    fetch('http://localhost:3000/logistics/partscontracts')
+      .then(res => res.json())
+      .then(data => setContracts(data))
+      .catch(err => console.error('Ошибка загрузки договоров:', err));
+  };
+
   const [applications, setApplications] = useState([]);
   const [staff, setStaff] = useState([]);
   const [stations, setStations] = useState([]);
@@ -140,7 +154,8 @@ function App() {
     loadCars();
     loadApplications();
     loadVendors();
-    
+    loadContracts();
+
     // Загрузка сотрудников
     fetch(`${host}/staff`)
       .then(res => res.json())
@@ -266,7 +281,7 @@ function App() {
                 />
               )}
               {activeTab === 'contracts' && (
-                <SparePartsContractsTable />
+                <PartsContractsTable contracts={contracts} onRefresh={loadContracts} />
               )}
             </section>
           </main>
@@ -316,6 +331,12 @@ function App() {
             onClose={() => setIsVendorModalOpen(false)}
             vendorToEdit={selectedVendor}
             onRefresh={loadVendors}
+          />
+          <ContractModal
+            isOpen={isContractModalOpen}
+            onClose={() => setIsContractModalOpen(false)}
+            onRefresh={loadContracts}
+            vendors={vendors} // Передаем список поставщиков, он у нас уже есть в App.jsx
           />
         </>
       )}

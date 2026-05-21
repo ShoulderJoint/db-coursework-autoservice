@@ -1,6 +1,29 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/contracts/'); // Папка, куда сохраняем
+    },
+    filename: function (req, file, cb) {
+        const safeBaseName = path.basename(file.originalname); //защита от directory traversal и относительных путей
+        let cleared = safeBaseName.replace(/[^a-zA-Z0-9\u0400-\u04FF._-]/g, '_');//защита от спецсимволов
+        cleared = cleared.replace(/_+/g, '_');
+        const targetDir = 'uploads/contracts/';//защита от перезаписи
+        let finalName = cleared;
+        if (fs.existsSync(path.join(targetDir, finalName))) {
+            const ext = path.extname(finalName); // например pdf
+            const base = path.basename(finalName, ext); // имя без расширения
+            finalName = `${base}-${Date.now()}${ext}`;
+        }
+        cb(null, finalName);
+    }
+});
+const upload = multer({ storage: storage });
 
 router.get('/stations', async (req, res) => {
     try {
@@ -60,10 +83,47 @@ router.get('/partscontracts', async (req, res) => {
             FROM parts_contracts pc
             JOIN vendors v ON pc.vendor_id = v.id
             `);
-        
         res.json(partsContracts);
     } catch (error) {
         res.status(500).json({ error: "Ошибка получения договоров" });
+    }
+});
+
+router.post('/partscontracts', upload.single('contractFile'), async (req, res) => {
+    const { vendorId } = req.body;
+    const fileName = req.file ? req.file.filename : null;
+
+    if (!fileName) return res.status(400).json({ error: "Файл договора обязателен" });
+
+    try {
+        await db.none(`
+            INSERT INTO parts_contracts (vendor_id, file_name, created_at, updated_at)
+            VALUES ($1, $2, NOW(), null)
+        `, [vendorId, fileName]);
+        res.status(201).json({ message: 'Договор добавлен' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.delete('/partscontracts/:id', async (req, res) => {
+    try {
+        // 1. Узнаем имя файла, чтобы удалить его физически
+        const contract = await db.oneOrNone('SELECT file_name FROM parts_contracts WHERE id = $1', [req.params.id]);
+
+        if (contract && contract.file_name) {
+            const filePath = path.join(__dirname, '../uploads/contracts/', contract.file_name);
+            // Удаляем файл с диска сервера, если он существует
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        // 2. Удаляем запись из БД
+        await db.none('DELETE FROM parts_contracts WHERE id = $1', [req.params.id]);
+        res.json({ message: 'Договор удален' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
