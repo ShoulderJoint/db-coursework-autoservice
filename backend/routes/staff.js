@@ -9,16 +9,21 @@ router.get('/', async (req, res) => {
             SELECT 
                 s.id, 
                 s.role_id,
+                s.system_role_id,
+                s.station_id,
                 s.surname, 
                 s.name, 
                 s.patronymic, 
+                s.login,
+                s.is_active,
                 st.city, 
                 r.name as role_name 
             FROM staff s
             JOIN stations st ON s.station_id = st.id
             JOIN roles r ON s.role_id = r.id
+            ORDER BY s.id ASC
         `);
-        const stations = await db.any('SELECT id, city FROM stations');
+        const stations = await db.any('SELECT id, city, street, house FROM stations');
         const roles = await db.any('SELECT id, name FROM roles');
         const systemRoles = await db.any('SELECT id, display_name FROM system_roles');
 
@@ -33,6 +38,38 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Ошибка получения данных из БД" });
+    }
+});
+
+router.post('/', async (req, res) => {
+    const { station_id, surname, name, patronymic, role_id, login, password, system_role_id } = req.body;
+    try {
+        // ВАЖНО: В реальном проекте пароль нужно хэшировать (например, через bcrypt)
+        // Здесь мы пока передаем его как есть или ставим заглушку
+        await db.none(`
+            INSERT INTO staff (station_id, surname, name, patronymic, role_id, login, password_hash, system_role_id, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
+        `, [station_id, surname, name, patronymic || null, role_id, login, password || 'default_hash', system_role_id]);
+        
+        res.status(201).json({ message: 'Сотрудник успешно добавлен' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.put('/:id', async (req, res) => {
+    const { station_id, surname, name, patronymic, role_id, login, system_role_id, is_active } = req.body;
+    try {
+        await db.none(`
+            UPDATE staff 
+            SET station_id = $1, surname = $2, name = $3, patronymic = $4, 
+                role_id = $5, login = $6, system_role_id = $7, is_active = $8
+            WHERE id = $9
+        `, [station_id, surname, name, patronymic || null, role_id, login, system_role_id, is_active, req.params.id]);
+        
+        res.json({ message: 'Данные сотрудника обновлены' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 

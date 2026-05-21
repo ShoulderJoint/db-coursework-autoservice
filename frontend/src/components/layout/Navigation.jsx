@@ -37,9 +37,28 @@ export const Sidebar = ({ activeTab, setActiveTab, currentUser, onLogout }) => (
 
 // 2. ВЕРНАЯ ШАПКА (копируем твой <header className="content-header">)
 export const Header = ({ activeTab, onOpenModal, currentUser }) => (
-  <header className="content-header">
+  <header 
+    className="content-header" 
+    style={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      width: '100%', 
+      boxSizing: 'border-box',
+      marginBottom: '20px',
+      minHeight: '40px'
+    }}
+  >
     <h1>{NAV_ITEMS.find(i => i.id === activeTab)?.label || 'Система'}</h1>
-    <div className="header-actions">
+
+    <div 
+      className="header-actions" 
+      style={{ 
+        display: 'flex', 
+        justifyContent: 'flex-end', 
+        minWidth: '200px'
+      }}
+    >
       {activeTab === 'work-orders' && currentUser?.role === 'advisor' && (
         <button className="btn-primary" onClick={onOpenModal}>
           + Создать ЗН

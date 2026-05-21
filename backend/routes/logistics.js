@@ -107,6 +107,7 @@ router.post('/partscontracts', upload.single('contractFile'), async (req, res) =
 });
 
 router.delete('/partscontracts/:id', async (req, res) => {
+
     try {
         // 1. Узнаем имя файла, чтобы удалить его физически
         const contract = await db.oneOrNone('SELECT file_name FROM parts_contracts WHERE id = $1', [req.params.id]);

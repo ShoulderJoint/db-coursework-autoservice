@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
-const PartsContractsTable = ({ contracts, onRefresh }) => {
+const PartsContractsTable = ({ contracts, onRefresh, userRole }) => {
+
+  const canEdit = userRole === 'advisor';
 
   const handleDelete = async (id) => {
     if (!window.confirm('Вы уверены, что хотите удалить этот договор? Файл будет стерт с сервера.')) return;
@@ -32,6 +34,8 @@ const PartsContractsTable = ({ contracts, onRefresh }) => {
           <th>Дата создания</th>
           <th>Последняя дата обновления</th>
           <th>PDF файл документа</th>
+          {/* Условный рендеринг заголовка колонки */}
+          {canEdit && <th>Действия</th>} 
         </tr>
       </thead>
       <tbody>
@@ -41,26 +45,27 @@ const PartsContractsTable = ({ contracts, onRefresh }) => {
             <td>{pc.name}</td>
             <td>{pc.created}</td>
             <td>{pc.updated || ''}</td>
-            <td>{pc.file_name ? (
-              <a
-                href={`http://localhost:3000/uploads/contracts/${pc.file_name}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {pc.file_name}
-              </a>
-            ) : (
-              'Файл не загружен'
-            )}</td>
             <td>
-              <button
-                className="btn-secondary"
-                style={{ padding: '6px 12px', cursor: 'pointer', color: '#ef4444', borderColor: '#ef4444' }}
-                onClick={() => handleDelete(pc.id)}
-              >
-                Удалить
-              </button>
+              {pc.file_name ? (
+                <a href={`http://localhost:3000/uploads/contracts/${pc.file_name}`} target="_blank" rel="noopener noreferrer">
+                  {pc.file_name}
+                </a>
+              ) : 'Файл не загружен'}
             </td>
+            
+            {/* Условный рендеринг самой ячейки с кнопкой */}
+            {canEdit && (
+              <td>
+                <button
+                  className="btn-secondary"
+                  style={{ padding: '6px 12px', cursor: 'pointer', color: '#ef4444', borderColor: '#ef4444' }}
+                  onClick={() => handleDelete(pc.id)}
+                >
+                  Удалить
+                </button>
+              </td>
+            )}
+            
           </tr>
         ))}
       </tbody>

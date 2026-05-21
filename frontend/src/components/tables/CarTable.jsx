@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-const CarTable = ({ cars, onEdit }) => {
+const CarTable = ({ cars, onEdit, userRole }) => {
+
+    const canEdit = userRole === 'admin';
+
     if (!cars || cars.length === 0) {
     return <p>Автомобилей пока нет. Добавьте первый!</p>;
   }
@@ -15,7 +18,7 @@ const CarTable = ({ cars, onEdit }) => {
           <th>Год</th>
           <th>VIN</th>
           <th>Гос. номер</th>
-          <th>Действия</th>
+          {canEdit && <th>Действия</th>}
         </tr>
       </thead>
       <tbody>
@@ -28,13 +31,17 @@ const CarTable = ({ cars, onEdit }) => {
             <td>{car.vin}</td>
             <td>{car.reg_number}</td>
             <td>
-              <button 
-                className="btn-primary" 
-                style={{ padding: '6px 12px', cursor: 'pointer' }}
-                onClick={() => onEdit(car)}
-              >
-                Редактировать
-              </button>
+              {canEdit && (
+                <td>
+                  <button
+                    className="btn-primary"
+                    style={{ padding: '6px 12px', cursor: 'pointer' }}
+                    onClick={() => onEdit(car)}
+                  >
+                    Редактировать
+                  </button>
+                </td>
+              )}
             </td>
           </tr>
         ))}

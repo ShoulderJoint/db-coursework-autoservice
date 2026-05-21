@@ -12,6 +12,7 @@ import CarModal from './components/modals/CarModal';
 import ApplicationModal from './components/modals/ApplicationModal';
 import VendorModal from './components/modals/VendorModal';
 import ContractModal from './components/modals/ContractModal';
+import StaffModal from './components/modals/StaffModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -65,6 +66,10 @@ function App() {
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
   const [contracts, setContracts] = useState([]);
 
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [staffMeta, setStaffMeta] = useState(null);
+
 
   const handleOpenPrimaryModal = () => {
     switch (activeTab) {
@@ -89,6 +94,10 @@ function App() {
         break;
       case 'contracts':
         setIsContractModalOpen(true);
+        break;
+      case 'staff':
+        setSelectedStaff(null);
+        setIsStaffModalOpen(true);
         break;
       default:
         console.warn(`Нет обработчика создания для вкладки: ${activeTab}`);
@@ -138,6 +147,16 @@ function App() {
       .catch(err => console.error('Ошибка загрузки договоров:', err));
   };
 
+  const loadStaff = () => {
+    fetch('http://localhost:3000/staff')
+      .then(res => res.json())
+      .then(data => {
+        setStaff(data.staff);
+        setStaffMeta(data.meta);
+      })
+      .catch(err => console.error('Ошибка сотрудников:', err));
+  };
+
   const [applications, setApplications] = useState([]);
   const [staff, setStaff] = useState([]);
   const [stations, setStations] = useState([]);
@@ -155,6 +174,7 @@ function App() {
     loadApplications();
     loadVendors();
     loadContracts();
+    loadStaff();
 
     // Загрузка сотрудников
     fetch(`${host}/staff`)
@@ -236,6 +256,7 @@ function App() {
               {activeTab === 'clients' && (
                 <ClientsTable
                   clients={clients}
+                  userRole={currentUser.role}
                   onEdit={(client) => {
                     setSelectedClient(client);
                     setIsClientModalOpen(true);
@@ -246,6 +267,7 @@ function App() {
               {activeTab === 'cars' && (
                 <CarTable
                   cars={cars}
+                  userRole={currentUser.role}
                   onEdit={(car) => {
                     setSelectedCar(car);
                     setIsCarModalOpen(true);
@@ -256,6 +278,7 @@ function App() {
               {activeTab === 'applications' && (
                 <ApplicationTable
                   applications={applications}
+                  userRole={currentUser.role}
                   onEdit={(app) => {
                     setSelectedApplication(app);
                     setIsAppModalOpen(true);
@@ -263,7 +286,14 @@ function App() {
                 />
               )}
               {activeTab === 'staff' && (
-                <StaffTable />
+                <StaffTable
+                  staff={staff}
+                  userRole={currentUser.role}
+                  onEdit={(employee) => {
+                    setSelectedStaff(employee);
+                    setIsStaffModalOpen(true);
+                  }}
+                />
               )}
               {activeTab === 'service-stations' && (
                 <ServiceStationsTable />
@@ -274,6 +304,7 @@ function App() {
               {activeTab === 'vendors' && (
                 <VendorsTable
                   vendors={vendors}
+                  userRole={currentUser.role}
                   onEdit={(v) => {
                     setSelectedVendor(v);
                     setIsVendorModalOpen(true);
@@ -281,7 +312,11 @@ function App() {
                 />
               )}
               {activeTab === 'contracts' && (
-                <PartsContractsTable contracts={contracts} onRefresh={loadContracts} />
+                <PartsContractsTable
+                  contracts={contracts}
+                  onRefresh={loadContracts}
+                  userRole={currentUser.role}
+                />
               )}
             </section>
           </main>
@@ -336,7 +371,14 @@ function App() {
             isOpen={isContractModalOpen}
             onClose={() => setIsContractModalOpen(false)}
             onRefresh={loadContracts}
-            vendors={vendors} // Передаем список поставщиков, он у нас уже есть в App.jsx
+            vendors={vendors}
+          />
+          <StaffModal
+            isOpen={isStaffModalOpen}
+            onClose={() => setIsStaffModalOpen(false)}
+            onRefresh={loadStaff}
+            staffToEdit={selectedStaff}
+            meta={staffMeta}
           />
         </>
       )}

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-const ApplicationTable = ({ applications, onEdit }) => {
+const ApplicationTable = ({ applications, onEdit, userRole }) => {
+
+  const canEdit = userRole === 'admin';
+  
   if (!applications) return <p>Загрузка данных из БД...</p>;
   if (applications.length === 0) return <p>Заявок пока нет.</p>;
 
@@ -20,7 +23,7 @@ const ApplicationTable = ({ applications, onEdit }) => {
           <th>Администратор</th>
           <th>Описание</th>
           <th>Дата создания</th>
-          <th>Действия</th>
+          {canEdit && <th>Действия</th>}
         </tr>
       </thead>
       <tbody>
@@ -32,13 +35,17 @@ const ApplicationTable = ({ applications, onEdit }) => {
             <td>{app.description}</td>
             <td>{formatDate(app.created_at)}</td>
             <td>
-              <button 
-                className="btn-primary" 
-                style={{ padding: '6px 12px', cursor: 'pointer' }}
-                onClick={() => onEdit(app)}
-              >
-                Редактировать
-              </button>
+              {canEdit && (
+                <td>
+                  <button
+                    className="btn-primary"
+                    style={{ padding: '6px 12px', cursor: 'pointer' }}
+                    onClick={() => onEdit(app)}
+                  >
+                    Редактировать
+                  </button>
+                </td>
+              )}
             </td>
           </tr>
         ))}

@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
             orders = await db.any(`
                 SELECT 
                     o.id AS order_id,
-                    a.id AS application_id
+                    a.id AS application_id,
                     s.surname AS staff_surname,
                     s.name AS staff_name,
                     s.patronymic AS staff_patronymic,
@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
                     c.reg_number
                 FROM orders o
                 join applications a on o.application_id=a.id
-                left join staff s on a.staff_id=s.id
+                join staff s on o.staff_id=s.id
                 JOIN order_statuses os ON o.status_id = os.id
                 join stations st on s.station_id=st.id
                 join cars c on a.car_id=c.id
@@ -66,7 +66,7 @@ router.get('/', async (req, res) => {
                     cl.patronymic AS client_patronymic
                 FROM orders o
                 join applications a on o.application_id=a.id
-                join staff s on a.staff_id=s.id
+                join staff s on o.staff_id=s.id
                 join stations st on s.station_id=st.id
                 JOIN order_statuses os ON o.status_id = os.id
                 join cars c on a.car_id=c.id
