@@ -165,34 +165,61 @@ router.post('/:id/services', async (req, res) => {
 router.get('/:id/parts', async (req, res) => {
     try {
         const parts = await db.any(`
-            SELECT op.id, pci.name, op.count, op.cost
+            SELECT 
+                op.id, 
+                pci.name as catalog_name, 
+                op.count, 
+                op.cost,
+                op.custom_name,
+                op.is_client_provided
             FROM order_parts op
-            JOIN parts_contract_items pci ON op.spare_part_id = pci.id
+            LEFT JOIN parts_contract_items pci ON op.spare_part_id = pci.id
             WHERE op.work_order_id = $1
+            ORDER BY op.id ASC
         `, [req.params.id]);
         res.json(parts);
     } catch (error) {
         res.status(500).json({ error: "Ошибка получения запчастей" });
     }
 });
-// POST: Добавление запчасти в существующий ЗН
 router.post('/:id/parts', async (req, res) => {
     const workOrderId = req.params.id; // Берем ID заказ-наряда из URL
-    const { sparePartId, count, cost } = req.body; // Получаем данные от фронтенда
+    const { sparePartId, customName, isClientProvided, count, cost } = req.body;
 
     try {
         // Делаем простую вставку. 
         // Триггер trg_update_costs_parts сработает сам и пересчитает сумму ЗН!
         await db.none(`
-            INSERT INTO order_parts (work_order_id, spare_part_id, count, cost)
-            VALUES ($1, $2, $3, $4)
-        `, [workOrderId, sparePartId, count, cost]);
+            INSERT INTO order_parts (work_order_id, spare_part_id, custom_name, is_client_provided, count, cost)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        `, [req.params.id, 
+            sparePartId || null,
+            (customName && customName.trim() !== "") ? customName.trim() : null, 
+            isClientProvided === true ? true : false, 
+            count || 1, 
+            cost || 0
+        ]);
 
         res.status(201).json({ message: "Комплектующее успешно добавлено" });
     } catch (error) {
         console.error('Ошибка добавления запчасти:', error);
         // Если ЗН закрыт, наш триггер блокировки выкинет ошибку, и мы передадим её на фронт
         res.status(403).json({ error: error.message || "Ошибка при сохранении" });
+    }
+});
+router.delete('/:id/parts/:partId', async (req, res) => {
+    const { id, partId } = req.params;
+    try {
+        await db.none(`
+            DELETE FROM order_parts 
+            WHERE id = $1 AND work_order_id = $2
+        `, [partId, id]);
+        
+        res.json({ message: "Деталь успешно удалена" });
+    } catch (error) {
+        console.error('Ошибка удаления детали:', error);
+        // Если ЗН закрыт, сработает триггер блокировки и вернет ошибку
+        res.status(403).json({ error: error.message || "Ошибка при удалении" });
     }
 });
 // Получение услуг конкретного ЗН
@@ -207,6 +234,22 @@ router.get('/:id/services', async (req, res) => {
         res.json(services);
     } catch (error) {
         res.status(500).json({ error: "Ошибка получения услуг" });
+    }
+});
+
+router.delete('/:id/services/:serviceId', async (req, res) => {
+    const { id, serviceId } = req.params;
+    try {
+        await db.none(`
+            DELETE FROM order_service 
+            WHERE id = $1 AND work_order_id = $2
+        `, [serviceId, id]);
+        
+        res.json({ message: "Услуга успешно удалена" });
+    } catch (error) {
+        console.error('Ошибка удаления услуги:', error);
+        // Если ЗН закрыт, сработает триггер блокировки и вернет ошибку
+        res.status(403).json({ error: error.message || "Ошибка при удалении" });
     }
 });
 
