@@ -13,6 +13,8 @@ import ApplicationModal from './components/modals/ApplicationModal';
 import VendorModal from './components/modals/VendorModal';
 import ContractModal from './components/modals/ContractModal';
 import StaffModal from './components/modals/StaffModal';
+import StationModal from './components/modals/StationModal';
+import ServiceCatalogModal from './components/modals/ServiceCatalogModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -70,6 +72,12 @@ function App() {
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [staffMeta, setStaffMeta] = useState(null);
 
+  const [isStationModalOpen, setIsStationModalOpen] = useState(false);
+  const [selectedStation, setSelectedStation] = useState(null);
+
+  const [isServiceCatalogModalOpen, setIsServiceCatalogModalOpen] = useState(false);
+  const [selectedCatalogService, setSelectedCatalogService] = useState(null);
+
 
   const handleOpenPrimaryModal = () => {
     switch (activeTab) {
@@ -98,6 +106,14 @@ function App() {
       case 'staff':
         setSelectedStaff(null);
         setIsStaffModalOpen(true);
+        break;
+      case 'service-stations':
+        setSelectedStation(null);
+        setIsStationModalOpen(true);
+        break;
+      case 'service-catalog':
+        setSelectedCatalogService(null);
+        setIsServiceCatalogModalOpen(true);
         break;
       default:
         console.warn(`Нет обработчика создания для вкладки: ${activeTab}`);
@@ -157,6 +173,20 @@ function App() {
       .catch(err => console.error('Ошибка сотрудников:', err));
   };
 
+  const loadStations = () => {
+    fetch('http://localhost:3000/logistics/stations')
+      .then(res => res.json())
+      .then(data => setStations(data))
+      .catch(err => console.error('Ошибка филиалов:', err));
+  };
+
+  const loadServices = () => {
+    fetch('http://localhost:3000/catalog')
+      .then(res => res.json())
+      .then(data => setServices(data))
+      .catch(err => console.error('Ошибка каталога услуг:', err));
+  };
+
   const [applications, setApplications] = useState([]);
   const [staff, setStaff] = useState([]);
   const [stations, setStations] = useState([]);
@@ -175,24 +205,8 @@ function App() {
     loadVendors();
     loadContracts();
     loadStaff();
-
-    // Загрузка сотрудников
-    fetch(`${host}/staff`)
-      .then(res => res.json())
-      .then(data => setStaff(data.staff))
-      .catch(err => console.error('Ошибка сотрудников:', err));
-
-    // Загрузка филиалов (из logistics.js)
-    fetch(`${host}/logistics/stations`)
-      .then(res => res.json())
-      .then(data => setStations(data))
-      .catch(err => console.error('Ошибка филиалов:', err));
-
-    // Загрузка услуг (каталога)
-    fetch(`${host}/catalog`)
-      .then(res => res.json())
-      .then(data => setServices(data))
-      .catch(err => console.error('Ошибка услуг:', err));
+    loadStations();
+    loadServices();
 
     fetch(`${host}/orders`)
       .then(res => res.json())
@@ -296,10 +310,24 @@ function App() {
                 />
               )}
               {activeTab === 'service-stations' && (
-                <ServiceStationsTable />
+                <ServiceStationsTable
+                  stations={stations}
+                  userRole={currentUser.role}
+                  onEdit={(st) => {
+                    setSelectedStation(st);
+                    setIsStationModalOpen(true);
+                  }}
+                />
               )}
               {activeTab === 'service-catalog' && (
-                <ServiceTable />
+                <ServiceTable
+                  services={services}
+                  userRole={currentUser.role}
+                  onEdit={(s) => {
+                    setSelectedCatalogService(s);
+                    setIsServiceCatalogModalOpen(true);
+                  }}
+                />
               )}
               {activeTab === 'vendors' && (
                 <VendorsTable
@@ -379,6 +407,18 @@ function App() {
             onRefresh={loadStaff}
             staffToEdit={selectedStaff}
             meta={staffMeta}
+          />
+          <StationModal
+            isOpen={isStationModalOpen}
+            onClose={() => setIsStationModalOpen(false)}
+            onRefresh={loadStations}
+            stationToEdit={selectedStation}
+          />
+          <ServiceCatalogModal
+            isOpen={isServiceCatalogModalOpen}
+            onClose={() => setIsServiceCatalogModalOpen(false)}
+            onRefresh={loadServices}
+            serviceToEdit={selectedCatalogService}
           />
         </>
       )}
