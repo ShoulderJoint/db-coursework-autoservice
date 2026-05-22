@@ -1,6 +1,6 @@
-require('dotenv').config();
-dotenv.config();
-process.env.TOKEN_SECRET;
+// require('dotenv').config();
+// dotenv.config();
+// process.env.TOKEN_SECRET;
 
 const express = require('express');
 const path = require('path');
