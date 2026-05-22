@@ -44,13 +44,18 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     const { station_id, surname, name, patronymic, role_id, login, password, system_role_id } = req.body;
     try {
-        // ВАЖНО: В реальном проекте пароль нужно хэшировать (например, через bcrypt)
-        // Здесь мы пока передаем его как есть или ставим заглушку
+
+        let passwordHash = null;
+
+        if (password) {
+            passwordHash = bcrypt.hash(password, 10);
+        }
+
         await db.none(`
             INSERT INTO staff (station_id, surname, name, patronymic, role_id, login, password_hash, system_role_id, is_active)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true)
-        `, [station_id, surname, name, patronymic || null, role_id, login, password || 'default_hash', system_role_id]);
-        
+        `, [station_id, surname, name, patronymic || null, role_id, login || null, passwordHash || null, system_role_id]);
+
         res.status(201).json({ message: 'Сотрудник успешно добавлен' });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -66,7 +71,7 @@ router.put('/:id', async (req, res) => {
                 role_id = $5, login = $6, system_role_id = $7, is_active = $8
             WHERE id = $9
         `, [station_id, surname, name, patronymic || null, role_id, login, system_role_id, is_active, req.params.id]);
-        
+
         res.json({ message: 'Данные сотрудника обновлены' });
     } catch (error) {
         res.status(500).json({ error: error.message });

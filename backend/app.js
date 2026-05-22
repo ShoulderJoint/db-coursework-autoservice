@@ -1,4 +1,6 @@
 require('dotenv').config();
+dotenv.config();
+process.env.TOKEN_SECRET;
 
 const express = require('express');
 const path = require('path');
@@ -6,7 +8,6 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 
-const usersRouter = require('./routes/users');
 const clientsRouter = require('./routes/clients');
 const carsRouter = require('./routes/cars');
 const staffRouter = require('./routes/staff');
@@ -25,7 +26,6 @@ app.use(cors());
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/users', usersRouter);
 app.use('/clients', clientsRouter);
 app.use('/cars', carsRouter);
 app.use('/applications', applicationsRouter);
