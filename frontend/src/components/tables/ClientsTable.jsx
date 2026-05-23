@@ -14,6 +14,8 @@ const ClientsTable = ({ clients, onEdit, userRole }) => {
           <th>ID</th>
           <th>ФИО</th>
           <th>Телефон</th>
+          <th>Электронная почта</th>
+          <th>Логин</th>
           {canEdit && <th>Действия</th>}
         </tr>
       </thead>
@@ -23,6 +25,8 @@ const ClientsTable = ({ clients, onEdit, userRole }) => {
             <td>{client.id}</td>
             <td>{`${client.surname || ''} ${client.name || ''} ${client.patronymic || ''}`.trim()}</td>
             <td>{client.phone}</td>
+            <td>{client.email}</td>
+            <td>{client.login}</td>
             <td>
               {canEdit && (
                 <td>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
   const [formData, setFormData] = useState({
-    surname: '', name: '', patronymic: '', phone: ''
+    surname: '', name: '', patronymic: '', phone: '', email: ''
   });
 
   useEffect(() => {
@@ -11,10 +11,11 @@ const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
         surname: clientToEdit.surname || '',
         name: clientToEdit.name || '',
         patronymic: clientToEdit.patronymic || '',
-        phone: clientToEdit.phone || ''
+        phone: clientToEdit.phone || '',
+        email: clientToEdit.email || ''
       });
     } else {
-      setFormData({ surname: '', name: '', patronymic: '', phone: '' });
+      setFormData({ surname: '', name: '', patronymic: '', phone: '', email: '' });
     }
   }, [clientToEdit, isOpen]);
 
@@ -68,6 +69,10 @@ const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
           <input 
             type="text" placeholder="Телефон (+7...)" required
             value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} 
+          />
+          <input 
+            type="text" placeholder="Почта (alex99@example.ru)" required
+            value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} 
           />
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px' }}>
