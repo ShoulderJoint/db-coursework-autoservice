@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const serviceTable = ({ services, userRole, onEdit }) => {
+const ServiceTable = ({ services, userRole, onEdit }) => {
 
   const canEdit = userRole === 'root';
 
@@ -37,4 +37,4 @@ const serviceTable = ({ services, userRole, onEdit }) => {
   );
 };
 
-export default serviceTable;
+export default ServiceTable;

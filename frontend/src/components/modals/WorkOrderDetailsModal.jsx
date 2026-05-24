@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../../api';
 
 const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
   const [services, setServices] = useState([]);
@@ -29,16 +30,16 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
 
   const loadOrderData = async () => {
     try {
-      // Текущие услуги ЗН
-      const resServices = await fetch(`http://localhost:3000/orders/${orderId}/services`);
+      //услуги ЗН
+      const resServices = await apiFetch(`/orders/${orderId}/services`);
       setServices(await resServices.json());
 
-      // Текущие запчасти ЗН
-      const resParts = await fetch(`http://localhost:3000/orders/${orderId}/parts`);
+      //запчасти ЗН
+      const resParts = await apiFetch(`/orders/${orderId}/parts`);
       setParts(await resParts.json());
 
-      // Данные самого ЗН (узнаем статус)
-      const resOrder = await fetch(`http://localhost:3000/orders/${orderId}`);
+      //данные ЗН
+      const resOrder = await apiFetch(`/orders/${orderId}`);
       const orderData = await resOrder.json();
       setCurrentStatusId(orderData.status_id);
     } catch (err) {
@@ -48,13 +49,13 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
 
   const loadCatalogData = async () => {
     try {
-      const resParts = await fetch('http://localhost:3000/catalog/parts');
+      const resParts = await apiFetch('/catalog/parts');
       setCatalogParts(await resParts.json());
 
-      const resServices = await fetch('http://localhost:3000/catalog');
+      const resServices = await apiFetch('/catalog');
       setCatalogServices(await resServices.json());
 
-      const resStatuses = await fetch('http://localhost:3000/orders/statuses');
+      const resStatuses = await apiFetch('/orders/statuses');
       setStatuses(await resStatuses.json());
     } catch (err) {
       console.error('Ошибка загрузки каталогов:', err);
@@ -64,9 +65,8 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
   // Смена статуса документа
   const handleStatusChange = async (newStatusId) => {
     try {
-      const response = await fetch(`http://localhost:3000/orders/${orderId}/status`, {
+      const response = await apiFetch(`/orders/${orderId}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ statusId: parseInt(newStatusId) })
       });
 
@@ -88,9 +88,8 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
     if (!newService.serviceId) return alert('Выберите услугу');
 
     try {
-      const response = await fetch(`http://localhost:3000/orders/${orderId}/services`, {
+      const response = await apiFetch(`/orders/${orderId}/services`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           serviceId: parseInt(newService.serviceId),
           count: newService.count,
@@ -118,7 +117,7 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/orders/${orderId}/services/${serviceId}`, {
+      const response = await apiFetch(`/orders/${orderId}/services/${serviceId}`, {
         method: 'DELETE'
       });
 
@@ -154,9 +153,8 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
       };
 
     try {
-      const response = await fetch(`http://localhost:3000/orders/${orderId}/parts`, {
+      const response = await apiFetch(`/orders/${orderId}/parts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -182,7 +180,7 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/orders/${orderId}/parts/${partId}`, {
+      const response = await apiFetch(`/orders/${orderId}/parts/${partId}`, {
         method: 'DELETE'
       });
 

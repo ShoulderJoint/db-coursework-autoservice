@@ -49,6 +49,8 @@ function App() {
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState(null);
 
+  const [orders, setOrders] = useState([]);
+
   const [isVendorModalOpen, setIsVendorModalOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
 
@@ -65,6 +67,22 @@ function App() {
   const [isServiceCatalogModalOpen, setIsServiceCatalogModalOpen] = useState(false);
   const [selectedCatalogService, setSelectedCatalogService] = useState(null);
 
+  const loadDataArray = async (endpoint, stateSetter, errorLabel) => {
+    try {
+      const response = await apiFetch(endpoint);
+      const data = await response.json();
+      
+      if (Array.isArray(data)) {
+        stateSetter(data);
+      } else {
+        console.error(`[${errorLabel}] Сервер вернул не массив:`, data);
+        stateSetter([]); // Защищаем .map() от падения
+      }
+    } catch (err) {
+      console.error(`[${errorLabel}] Ошибка сети:`, err);
+      stateSetter([]);
+    }
+  };
 
   const handleOpenPrimaryModal = () => {
     switch (activeTab) {
@@ -115,39 +133,24 @@ function App() {
     setCurrentUser(user);
   };
 
-  const loadClients = () => {
-    apiFetch('/clients')
-      .then(res => res.json())
-      .then(data => setClients(data))
-      .catch(err => console.error('Ошибка клиентов:', err));
-  };
+  const loadClients = () => loadDataArray('/clients', setClients, 'Клиенты');
+  const loadCars = () => loadDataArray('/cars', setCars, 'Авто');
+  const loadApplications = () => loadDataArray('/applications', setApplications, 'Заявки');
+  const loadVendors = () => loadDataArray('/logistics/vendors', setVendors, 'Поставщики');
+  const loadContracts = () => loadDataArray('/logistics/partscontracts', setContracts, 'Договоры');
+  const loadStations = () => loadDataArray('/logistics/stations', setStations, 'Филиалы');
+  const loadServices = () => loadDataArray('/catalog', setServices, 'Каталог услуг');
 
-  const loadCars = () => {
-    apiFetch('/cars')
+  const loadOrders = () => {
+    apiFetch('/orders')
       .then(res => res.json())
-      .then(data => setCars(data))
-      .catch(err => console.error('Ошибка загрузки авто:', err));
-  };
-
-  const loadApplications = () => {
-    apiFetch('/applications')
-      .then(res => res.json())
-      .then(data => setApplications(data))
-      .catch(err => console.error('Ошибка заявок:', err));
-  }
-
-  const loadVendors = () => {
-    apiFetch('/logistics/vendors')
-      .then(res => res.json())
-      .then(data => setVendors(data))
-      .catch(err => console.error('Ошибка загрузки поставщиков:', err));
-  };
-
-  const loadContracts = () => {
-    apiFetch('/logistics/partscontracts')
-      .then(res => res.json())
-      .then(data => setContracts(data))
-      .catch(err => console.error('Ошибка загрузки договоров:', err));
+      .then(data => {
+        setOrders(data.orders || []);
+        if (data.meta && data.meta.statuses) {
+          setStatuses(data.meta.statuses);
+        }
+      })
+      .catch(err => console.error('Ошибка загрузки ЗН:', err));
   };
 
   const loadStaff = () => {
@@ -160,20 +163,6 @@ function App() {
       .catch(err => console.error('Ошибка сотрудников:', err));
   };
 
-  const loadStations = () => {
-    apiFetch('/logistics/stations')
-      .then(res => res.json())
-      .then(data => setStations(data))
-      .catch(err => console.error('Ошибка филиалов:', err));
-  };
-
-  const loadServices = () => {
-    apiFetch('/catalog')
-      .then(res => res.json())
-      .then(data => setServices(data))
-      .catch(err => console.error('Ошибка каталога услуг:', err));
-  };
-
   const [applications, setApplications] = useState([]);
   const [staff, setStaff] = useState([]);
   const [stations, setStations] = useState([]);
@@ -184,25 +173,19 @@ function App() {
   const [vendors, setVendors] = useState([]);
 
   useEffect(() => {
-
-    loadClients()
-    loadCars();
-    loadApplications();
-    loadVendors();
-    loadContracts();
-    loadStaff();
-    loadStations();
-    loadServices();
-
-    apiFetch('/orders')
-      .then(res => res.json())
-      .then(data => {
-        if (data.meta && data.meta.statuses) {
-          setStatuses(data.meta.statuses);
-        }
-      })
-      .catch(err => console.error('Ошибка статусов:', err));
-  }, []);
+    // Делаем запросы ТОЛЬКО если пользователь авторизован (currentUser не null)
+    if (currentUser) {
+      loadClients();
+      loadCars();
+      loadApplications();
+      loadVendors();
+      loadContracts();
+      loadStaff();
+      loadStations();
+      loadServices();
+      loadOrders();
+    }
+  }, [currentUser]);
 
   return (
     <div className="app-container">
@@ -238,11 +221,7 @@ function App() {
                       <div className="dashboard-card highlight">
                         <h3>В работе</h3>
                         {/* Считаем ЗН со статусом "В работе" для этого клиента */}
-                        <div className="big-number">2 автомобиля</div>
-                      </div>
-                      <div className="dashboard-card">
-                        <h3>Ваши бонусы</h3>
-                        <p>500 баллов</p>
+                        <div className="big-number">{cars.length} автомобиля(ей)</div>
                       </div>
                     </>
                   )}
@@ -250,7 +229,14 @@ function App() {
               )}
 
               {activeTab === 'work-orders' && (
-                <WorkOrderTable currentUser={currentUser} />
+                <WorkOrderTable
+                  orders={orders}
+                  userRole={currentUser.role}
+                  onEdit={(order) => {
+                    setSelectedOrderId(order.order_id);
+                    setIsDetailsOpen(true);
+                  }}
+                />
               )}
 
               {activeTab === 'clients' && (

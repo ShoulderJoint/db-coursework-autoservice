@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db'); 
+const authMiddleware = require('../middleware/authMiddleware');
+
+router.use(authMiddleware);
 
 router.get('/', async (req, res) => {
-    // Временно читаем роль и ID из URL-параметров
-    const { role, userId } = req.query;
-
     try {
         let orders;
-        if (role === 'client') {
+        
+        if (req.user.role === 'client') {
             orders = await db.any(`
                 SELECT 
                     o.id AS order_id,
@@ -36,9 +37,9 @@ router.get('/', async (req, res) => {
                 join stations st on s.station_id=st.id
                 join cars c on a.car_id=c.id
                 join clients cl on c.client_id=cl.id
-                WHERE cl.id = $1
+                WHERE cl.id = $1  -- Фильтруем по ID из токена
                 ORDER BY a.id DESC
-            `, [userId]);
+            `, [req.user.id]);
             
         } else {
             orders = await db.any(`
@@ -74,19 +75,17 @@ router.get('/', async (req, res) => {
                 ORDER BY a.id DESC
             `);
         }
+        
         const statuses = await db.any('SELECT id, name FROM order_statuses');
 
-        // Отправляем данные и метаданные
         res.json({
             orders: orders,
-            meta: {
-                statuses: statuses
-            }
+            meta: { statuses: statuses }
         });
         
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Ошибка получения автопарка" });
+        console.error('Ошибка получения ЗН:', error);
+        res.status(500).json({ error: "Ошибка получения заказ-нарядов" });
     }
 });
 router.post('/', async (req, res) => {

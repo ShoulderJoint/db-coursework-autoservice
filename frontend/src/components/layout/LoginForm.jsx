@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { setAccessToken } from '../../api';
+import { setAccessToken, apiFetch } from '../../api';
 import '../../style.css';
+
 
 const IconEye = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -61,8 +62,27 @@ const LoginForm = ({ onLoginSuccess }) => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    alert(`Тут будет запрос на смену пароля на: ${newPassword}`);
-    // Здесь мы потом вызовем apiFetch('/auth/password-setup', { method: 'PUT', ... })
+
+    try {
+      const response = await apiFetch('/auth/password-setup', {
+        method: 'PUT',
+        body: JSON.stringify({ newPassword })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        setAccessToken(data.accessToken);
+
+        onLoginSuccess(data.user);
+      } else {
+        const err = await response.json();
+        alert(`Ошибка: ${err.error || 'Не удалось обновить пароль'}`);
+      }
+    } catch (error) {
+      console.error('Ошибка:', error);
+      alert('Ошибка соединения с сервером');
+    }
   };
 
   if (isFirstLoginMode) {
@@ -156,7 +176,7 @@ const LoginForm = ({ onLoginSuccess }) => {
                   justifyContent: 'center',
                   width: '24px',
                   height: '24px',
-                  background: '#fff', 
+                  background: '#fff',
                 }}
               >
                 {showMainPassword ? <IconEye /> : <IconEyeCrossed />}

@@ -3,6 +3,14 @@ const router = express.Router();
 const db = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/authMiddleware');
+
+const roleMap = {
+    1: 'client',
+    2: 'admin', 
+    3: 'advisor', 
+    4: 'manager'
+};
 
 router.post('/login', async (req, res) => {
     const { login, password } = req.body;
@@ -33,7 +41,8 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        const payload = { id: user.id, role: user.system_role_id };
+        const payload = { id: user.id, 
+            role: roleMap[user.system_role_id] || 'client'};
 
         const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES });
 
@@ -48,7 +57,12 @@ router.post('/login', async (req, res) => {
         res.status(200).json({
             message: 'Успешный вход',
             accessToken,
-            user: { id: user.id, login: user.login }
+            user: { 
+        id: user.id, 
+        login: user.login,
+        name: `${user.surname || ''} ${user.name || ''} ${user.patronymic || ''}`.trim(),
+        role: roleMap[user.system_role_id] || 'client'
+    }
         });
     } catch (error) {
         console.error('Ошибка при авторизации:', error);
@@ -56,20 +70,42 @@ router.post('/login', async (req, res) => {
     }
 });
 
-router.put('/', async (req, res) => {
+router.put('/password-setup', authMiddleware, async (req, res) => {
+    const { newPassword } = req.body;
+    
+    const userId = req.user.id; 
+
     try {
-        let user;
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-        user = await db.any(`
-                SELECT 
-                    
-                `);
+        await db.none(
+            `UPDATE clients 
+             SET password_hash = $1, is_first_login = false 
+             WHERE id = $2`,
+            [hashedPassword, userId]
+        );
 
-        res.json();
+        //создание токенов, чтоб не было повторного логина
+        const user = await db.one('SELECT id, login, system_role_id, name, surname, patronymic FROM clients WHERE id = $1', [userId]);
+        const payload = { id: user.id, role: user.system_role_id };
+        
+        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES });
+        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            maxAge: 14 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json({
+            message: 'Пароль успешно изменен',
+            accessToken,
+            user: { id: user.id, login: user.login }
+        });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Ошибка входа" });
+        console.error('Ошибка при установке пароля:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
     }
 });
 

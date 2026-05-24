@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiFetch } from '../../api';
 
 const WorkOrderModal = ({ 
   isOpen, 
@@ -77,7 +78,7 @@ const handleSubmit = async (e) => {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/orders', {
+      const response = await apiFetch('/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
