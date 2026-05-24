@@ -26,20 +26,18 @@ const ClientsTable = ({ clients, onEdit, userRole }) => {
             <td>{`${client.surname || ''} ${client.name || ''} ${client.patronymic || ''}`.trim()}</td>
             <td>{client.phone}</td>
             <td>{client.email}</td>
-            <td>{client.login}</td>
-            <td>
-              {canEdit && (
-                <td>
-                  <button
-                    className="btn-primary"
-                    style={{ padding: '6px 12px', cursor: 'pointer' }}
-                    onClick={() => onEdit(client)}
-                  >
-                    Редактировать
-                  </button>
-                </td>
-              )}
-            </td>
+            <td>{client.login}</td>           
+            {canEdit && (
+              <td>
+                <button
+                  className="btn-primary"
+                  style={{ padding: '6px 12px', cursor: 'pointer' }}
+                  onClick={() => onEdit(client)}
+                >
+                  Редактировать
+                </button>
+              </td>
+            )}
           </tr>
         ))}
       </tbody>

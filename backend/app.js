@@ -1,6 +1,4 @@
-// require('dotenv').config();
-// dotenv.config();
-// process.env.TOKEN_SECRET;
+require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
@@ -15,6 +13,8 @@ const applicationsRouter = require('./routes/applications');
 const workOrderRouter = require('./routes/orders');
 const catalogRouter = require('./routes/catalog');
 const logisticsRouter=require('./routes/logistics');
+
+const authRouter = require('./routes/auth');
 
 const app = express();
 
@@ -33,5 +33,7 @@ app.use('/orders', workOrderRouter);
 app.use('/catalog', catalogRouter);
 app.use('/logistics', logisticsRouter);
 app.use('/staff', staffRouter);
+
+app.use('/auth', authRouter);
 
 module.exports = app;

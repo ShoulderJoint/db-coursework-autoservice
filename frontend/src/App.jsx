@@ -27,20 +27,7 @@ import ServiceStationsTable from './components/tables/ServiceStations';
 import VendorsTable from './components/tables/VendorsTable';
 import PartsContractsTable from './components/tables/SparePartsContractsTable';
 
-/*├── data/
-│ └── mockData.js // Все наши массивы (MOCK_CLIENTS, MOCK_CARS и т.д.)
-├── components/
-│ ├── Layout/
-│ │ ├── Navigation.jsx // Сайдбар и шапка
-│ │ └── LoginForm.jsx // Окно входа
-│ ├── Tables/
-│ │ ├── WorkOrderTable.jsx
-│ │ ├── CarTable.jsx
-│ │ └── ServiceTable.jsx
-│ └── Modals/
-│ └──   WorkOrderModal.jsx // Та самая большая форма создания ЗН
-├── App.jsx // Главный файл: логика входа и переключения табов
-└── style.css // Стили*/
+import { apiFetch } from './api';
 
 function App() {
 
@@ -129,42 +116,42 @@ function App() {
   };
 
   const loadClients = () => {
-    fetch('http://localhost:3000/clients')
+    apiFetch('/clients')
       .then(res => res.json())
       .then(data => setClients(data))
       .catch(err => console.error('Ошибка клиентов:', err));
   };
 
   const loadCars = () => {
-    fetch('http://localhost:3000/cars')
+    apiFetch('/cars')
       .then(res => res.json())
       .then(data => setCars(data))
       .catch(err => console.error('Ошибка загрузки авто:', err));
   };
 
   const loadApplications = () => {
-    fetch('http://localhost:3000/applications')
+    apiFetch('/applications')
       .then(res => res.json())
       .then(data => setApplications(data))
       .catch(err => console.error('Ошибка заявок:', err));
   }
 
   const loadVendors = () => {
-    fetch('http://localhost:3000/logistics/vendors')
+    apiFetch('/logistics/vendors')
       .then(res => res.json())
       .then(data => setVendors(data))
       .catch(err => console.error('Ошибка загрузки поставщиков:', err));
   };
 
   const loadContracts = () => {
-    fetch('http://localhost:3000/logistics/partscontracts')
+    apiFetch('/logistics/partscontracts')
       .then(res => res.json())
       .then(data => setContracts(data))
       .catch(err => console.error('Ошибка загрузки договоров:', err));
   };
 
   const loadStaff = () => {
-    fetch('http://localhost:3000/staff')
+    apiFetch('/staff')
       .then(res => res.json())
       .then(data => {
         setStaff(data.staff);
@@ -174,14 +161,14 @@ function App() {
   };
 
   const loadStations = () => {
-    fetch('http://localhost:3000/logistics/stations')
+    apiFetch('/logistics/stations')
       .then(res => res.json())
       .then(data => setStations(data))
       .catch(err => console.error('Ошибка филиалов:', err));
   };
 
   const loadServices = () => {
-    fetch('http://localhost:3000/catalog')
+    apiFetch('/catalog')
       .then(res => res.json())
       .then(data => setServices(data))
       .catch(err => console.error('Ошибка каталога услуг:', err));
@@ -197,7 +184,6 @@ function App() {
   const [vendors, setVendors] = useState([]);
 
   useEffect(() => {
-    const host = 'http://localhost:3000';
 
     loadClients()
     loadCars();
@@ -208,7 +194,7 @@ function App() {
     loadStations();
     loadServices();
 
-    fetch(`${host}/orders`)
+    apiFetch('/orders')
       .then(res => res.json())
       .then(data => {
         if (data.meta && data.meta.statuses) {

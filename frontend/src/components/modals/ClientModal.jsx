@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiFetch } from '../../api';
 
 const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
   const [formData, setFormData] = useState({
@@ -22,15 +23,12 @@ const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const url = clientToEdit 
-      ? `http://localhost:3000/clients/${clientToEdit.id}` 
-      : 'http://localhost:3000/clients';
+    const endpoint = clientToEdit ? `/clients/${clientToEdit.id}` : '/clients';
     const method = clientToEdit ? 'PUT' : 'POST';
 
     try {
-      const response = await fetch(url, {
+      const response = await apiFetch(endpoint, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
@@ -39,7 +37,7 @@ const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
         onClose();   
       } else {
         const err = await response.json();
-        alert(`Ошибка: ${err.error}`);
+        alert(`Ошибка: ${err.error || err.message}`);
       }
     } catch (error) {
       alert('Ошибка при сохранении данных');
