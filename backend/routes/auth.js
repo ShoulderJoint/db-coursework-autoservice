@@ -9,14 +9,20 @@ const roleMap = {
     1: 'client',
     2: 'admin', 
     3: 'advisor', 
-    4: 'manager'
+    4: 'root'
 };
 
 router.post('/login', async (req, res) => {
     const { login, password } = req.body;
 
     try {
-        const user = await db.oneOrNone('SELECT * FROM clients WHERE login = $1', [login]);
+        let user = await db.oneOrNone('SELECT * FROM clients WHERE login = $1', [login]);
+        let isStaff = false;
+
+        if (!user) {
+            user = await db.oneOrNone('SELECT * FROM staff WHERE login = $1 AND is_active = true', [login]);
+            isStaff = true; // Ставим флажок, что это работник
+        }
 
         if (!user) {
             return res.status(401).json({ error: 'Неверный логин или пароль' });
@@ -27,45 +33,46 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Неверный логин или пароль' });
         }
 
-        if (user.is_first_login) {
-            const tempToken = jwt.sign(
-                { id: user.id },
-                process.env.JWT_ACCESS_SECRET,
-                { expiresIn: process.env.ACCESS_TOKEN_EXPIRES }
+        if (!isStaff && user.is_first_login) {
+            const setupToken = jwt.sign(
+                { id: user.id }, 
+                process.env.JWT_ACCESS_SECRET, 
+                { expiresIn: '15m' }
             );
-
             return res.status(403).json({
-                message: 'Требуется смена пароля',
-                isFirstLogin: true,
-                tempToken
+                message: 'Требуется установка постоянного пароля',
+                requiresPasswordSetup: true,
+                setupToken
             });
         }
 
-        const payload = { id: user.id, 
-            role: roleMap[user.system_role_id] || 'client'};
+        const payload = { 
+            id: user.id, 
+            role: roleMap[user.system_role_id] || (isStaff ? 'admin' : 'client') 
+        };
 
         const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES });
-
         const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES });
 
         res.cookie('refreshToken', refreshToken, {
-            httpOnly: true, // Защита от XSS (недоступно из JavaScript на клиенте)
-            maxAge: 14 * 24 * 60 * 60 * 1000, // 14 дней в миллисекундах
-            // secure: true, //при вынесении на сервер, передача только https
+            httpOnly: true, //защита от xxs
+            maxAge: 14 * 24 * 60 * 60 * 1000
+            //secure:true //потенциальный https
         });
 
         res.status(200).json({
             message: 'Успешный вход',
             accessToken,
             user: { 
-        id: user.id, 
-        login: user.login,
-        name: `${user.surname || ''} ${user.name || ''} ${user.patronymic || ''}`.trim(),
-        role: roleMap[user.system_role_id] || 'client'
-    }
+                id: user.id, 
+                login: user.login,
+                name: `${user.surname || ''} ${user.name || ''}`.trim(),
+                role: payload.role
+            }
         });
+
     } catch (error) {
-        console.error('Ошибка при авторизации:', error);
+        console.error('Ошибка авторизации:', error);
         res.status(500).json({ error: 'Внутренняя ошибка сервера' });
     }
 });

@@ -35,77 +35,51 @@ export const Sidebar = ({ activeTab, setActiveTab, currentUser, onLogout }) => (
   </nav>
 );
 
-// 2. ВЕРНАЯ ШАПКА (копируем твой <header className="content-header">)
-export const Header = ({ activeTab, onOpenModal, currentUser }) => (
-  <header 
-    className="content-header" 
-    style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      width: '100%', 
-      boxSizing: 'border-box',
-      marginBottom: '20px',
-      minHeight: '40px'
-    }}
-  >
-    <h1>{NAV_ITEMS.find(i => i.id === activeTab)?.label || 'Система'}</h1>
+export const Header = ({ activeTab, onOpenModal, currentUser }) => {
+  const role = currentUser?.role;
 
-    <div 
-      className="header-actions" 
-      style={{ 
-        display: 'flex', 
-        justifyContent: 'flex-end', 
-        minWidth: '200px'
-      }}
-    >
-      {activeTab === 'work-orders' && currentUser?.role === 'advisor' && (
-        <button className="btn-primary" onClick={onOpenModal}>
-          + Создать ЗН
-        </button>
-      )}
-        {activeTab === 'clients' && currentUser?.role === 'admin' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Добавить клиента
-          </button>
+  return (
+    <header className="content-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', boxSizing: 'border-box', marginBottom: '20px', minHeight: '40px' }}>
+      <h1>{NAV_ITEMS.find(i => i.id === activeTab)?.label || 'Система'}</h1>
+
+      <div className="header-actions" style={{ display: 'flex', justifyContent: 'flex-end', minWidth: '200px' }}>
+
+        {activeTab === 'work-orders' && ['advisor', 'root'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Создать ЗН</button>
         )}
 
-        {activeTab === 'applications' && currentUser?.role === 'admin' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Создать заявку
-          </button>
+        {activeTab === 'clients' && ['admin', 'root'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Добавить клиента</button>
         )}
 
-        {activeTab === 'cars' && currentUser?.role === 'admin' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Добавить авто
-          </button>
+        {activeTab === 'applications' && ['admin', 'root', 'advisor'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Создать заявку</button>
         )}
-        {activeTab === 'vendors' && currentUser?.role === 'advisor' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Добавить поставщика
-          </button>
+
+        {activeTab === 'cars' && ['admin', 'root'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Добавить авто</button>
         )}
-        {activeTab === 'contracts' && currentUser?.role === 'advisor' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Добавить договор
-          </button>
+
+        {activeTab === 'vendors' && ['advisor', 'root'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Добавить поставщика</button>
         )}
-        {activeTab === 'staff' && currentUser?.role === 'root' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Добавить работника
-          </button>
+
+        {activeTab === 'contracts' && ['advisor', 'root'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Добавить договор</button>
         )}
-        {activeTab === 'service-stations' && currentUser?.role === 'root' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Добавить филиал
-          </button>
+
+        {activeTab === 'staff' && ['root'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Добавить работника</button>
         )}
-        {activeTab === 'service-catalog' && currentUser?.role === 'root' && (
-          <button className="btn-primary" onClick={onOpenModal}>
-            + Добавить услугу
-          </button>
+
+        {activeTab === 'service-stations' && ['root'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Добавить филиал</button>
         )}
-    </div>
-  </header>
-);
+
+        {activeTab === 'service-catalog' && ['root', 'admin'].includes(role) && (
+          <button className="btn-primary" onClick={onOpenModal}>+ Добавить услугу</button>
+        )}
+      </div>
+    </header>
+  );
+};

@@ -213,7 +213,7 @@ function App() {
                 <div className="dashboard-grid">
                   <div className="dashboard-card">
                     <h3>Профиль: {currentUser.name}</h3>
-                    <p>Статус: Постоянный клиент</p>
+                    <p>Статус:</p>
                   </div>
 
                   {currentUser.role === 'client' && (
