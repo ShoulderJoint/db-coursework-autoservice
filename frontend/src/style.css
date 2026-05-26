@@ -2,16 +2,6 @@
     box-sizing: border-box;
 }
 
-/* Ограничим ширину контента модалки и разрешим ему сжиматься */
-.modal-content {
-    max-width: 95vw; /* Чтобы не вылезало на маленьких экранах */
-    width: 650px;    /* Немного расширим для 4-х колонок */
-}
-
-.services-container {
-    width: 100%;
-    overflow-x: hidden; /* Запрещаем горизонтальный скролл внутри */
-}
 :root {
     --primary-color: #2563eb;
     --bg-color: #f8fafc;
@@ -106,7 +96,42 @@ body {
     border-bottom: 1px solid #e2e8f0;
 }
 
-/* Модалка и формы */
+/* ----------------------------------
+   Модальные окна
+----------------------------------- */
+
+/* Затемненный фон поверх всего сайта для React */
+.modal-overlay {
+    position: fixed;
+    top: 0; 
+    left: 0; 
+    width: 100vw; 
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Базовый класс белого окна (для крупных модалок вроде ЗН) */
+.modal-content {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 800px; /* По умолчанию широкое окно */
+    max-height: 95vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Модификатор для маленьких окон (Профиль, Логин) */
+.modal-sm {
+    max-width: 400px;
+}
+
+/* Класс для старых модалок (если используется display: none) */
 .modal {
     display: none;
     position: fixed;
@@ -116,19 +141,19 @@ body {
     justify-content: center;
 }
 
-.modal-content {
-    background: var(--white);
-    padding: 30px;
-    border-radius: 12px;
-    width: 800px;
-    
-}
-
+/* ----------------------------------
+   Элементы форм
+----------------------------------- */
 .service-row {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr;
     gap: 10px;
     margin-bottom: 10px;
+}
+
+.services-container {
+    width: 100%;
+    overflow-x: hidden;
 }
 
 input {
@@ -141,4 +166,23 @@ input[type="password"]::-ms-reveal,
 input[type="password"]::-ms-clear,
 input[type="password"]::-webkit-credentials-auto-fill-button {
   display: none !important;
+}
+
+/* Стили для всех блоков форм */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;       /* Переносит поле ввода на следующую строку */
+    margin-bottom: 5px;   /* Отступ между текстом и полем ввода */
+    font-weight: 500;     /* Делает текст чуть жирнее, чтобы он лучше читался */
+    color: #475569;       /* Приглушенный цвет текста */
+}
+
+/* Делаем поля ввода на всю ширину для красоты */
+.form-group input, 
+.form-group select {
+    width: 100%;
+    box-sizing: border-box;
 }

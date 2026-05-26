@@ -1,19 +1,33 @@
 import React from 'react';
 import { NAV_ITEMS } from '../../data/mockData';
 
-export const Sidebar = ({ activeTab, setActiveTab, currentUser, onLogout }) => (
+export const Sidebar = ({ activeTab, setActiveTab, currentUser, onLogout, onOpenProfile }) => (
   <nav className="sidebar">
     <div className="sidebar-header">
       <span className="logo-text">СТО Система</span>
+      
+      {/* Исправлено отображение имени пользователя */}
       <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '10px' }}>
-        Вы вошли как: <br /><strong>{currentUser?.surname} {currentUser?.name}</strong>
+        Вы вошли как: <br /><strong>{currentUser?.name}</strong>
       </div>
-      <button
-        onClick={onLogout}
-        style={{ marginTop: '10px', fontSize: '10px', padding: '4px' }}
-      >
-        Выйти
-      </button>
+      
+      {/* Добавлен блок с кнопками профиля и выхода */}
+      <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+        {currentUser?.role === 'client' && (
+          <button
+            onClick={onOpenProfile}
+            style={{ fontSize: '10px', padding: '4px' }}
+          >
+            Профиль
+          </button>
+        )}
+        <button
+          onClick={onLogout}
+          style={{ fontSize: '10px', padding: '4px' }}
+        >
+          Выйти
+        </button>
+      </div>
     </div>
 
     <ul style={{ listStyle: 'none', padding: 0 }}>

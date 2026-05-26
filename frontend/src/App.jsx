@@ -16,6 +16,8 @@ import StaffModal from './components/modals/StaffModal';
 import StationModal from './components/modals/StationModal';
 import ServiceCatalogModal from './components/modals/ServiceCatalogModal';
 import ApplicationInfoModal from './components/modals/ApplicationInfoModal';
+import ProfileModal from './components/modals/ProfileModal';
+
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -72,6 +74,8 @@ function App() {
 
   const [isAppViewOpen, setIsAppViewOpen] = useState(false);
   const [viewingApplication, setViewingApplication] = useState(null);
+
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const loadDataArray = async (endpoint, stateSetter, errorLabel) => {
     try {
@@ -217,6 +221,7 @@ function App() {
             setActiveTab={setActiveTab}
             currentUser={currentUser}
             onLogout={handleLogout}
+            onOpenProfile={() => setIsProfileModalOpen(true)}
           />
 
           <main className="content">
@@ -420,6 +425,19 @@ function App() {
               setViewingApplication(null);
             }}
             application={viewingApplication}
+          />
+          <ProfileModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+            currentUser={currentUser}
+            clientData={clients.find(c => c.id === currentUser.id)}
+            onProfileUpdate={(updatedData) => {
+              setCurrentUser({
+                ...currentUser,
+                name: `${updatedData.surname || ''} ${updatedData.name || ''}`.trim()
+              });
+              loadClients();
+            }}
           />
         </>
       )}
