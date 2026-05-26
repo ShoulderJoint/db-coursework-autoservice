@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const VendorsTable = ({ vendors, onEdit, userRole }) => {
 
-    const canEdit = userRole === 'advisor';
+    const canEdit = userRole === 'root';
 
     if (!vendors) return <p>Загрузка данных из БД...</p>;
     if (vendors.length === 0) return <p>Поставщиков пока нет.</p>;

@@ -11,7 +11,6 @@ const ServiceTable = ({ services, userRole, onEdit }) => {
     <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
-          <th>ID</th>
           <th>Наименование услуги</th>
           <th>Базовая стоимость</th>
           <th style={{ width: '150px' }}>{canEdit ? 'Действия' : ''}</th>
@@ -20,7 +19,6 @@ const ServiceTable = ({ services, userRole, onEdit }) => {
       <tbody>
         {services.map(s => (
           <tr key={s.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-            <td>{s.id}</td>
             <td>{s.name}</td>
             <td>{parseFloat(s.price).toLocaleString('ru-RU')} руб.</td>
             <td>

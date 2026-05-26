@@ -1,16 +1,14 @@
-// Имитация данных (позже заменим на запросы к Node.js + PostgreSQL)
-
 export const NAV_ITEMS = [
   { id: 'dashboard', label: 'Рабочий стол', roles: ['root', 'admin', 'advisor', 'client'] },
   { id: 'work-orders', label: 'Заказ-наряды', roles: ['root', 'admin', 'advisor', 'client'] },
   { id: 'applications', label: 'Заявки', roles: ['root', 'admin', 'advisor', 'client'] },
-  { id: 'clients', label: 'База клиентов', roles: ['root', 'admin'] }, // МП убрали
-  { id: 'cars', label: 'Автопарк', roles: ['root', 'admin', 'client'] }, // Клиент видит свои
+  { id: 'clients', label: 'База клиентов', roles: ['root', 'admin'] },
+  { id: 'cars', label: 'Автопарк', roles: ['root', 'admin', 'client'] },
   { id: 'staff', label: 'Персонал', roles: ['root'] }, //
   { id: 'service-stations', label: 'Филиалы', roles: ['root', 'advisor'] },
   { id: 'service-catalog', label: 'Каталог услуг', roles: ['root', 'admin', 'advisor', 'client'] },
   { id: 'vendors', label: 'Поставщики', roles: ['root', 'advisor'] },
-  { id: 'contracts', label: 'Договоры', roles: ['root', 'admin', 'advisor'] }
+  { id: 'contracts', label: 'Договоры', roles: ['root', 'advisor'] }
 ];
 
 export const MOCK_ROLES = [

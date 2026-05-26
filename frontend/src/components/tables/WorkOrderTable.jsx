@@ -1,7 +1,7 @@
 import React from 'react';
 
 const WorkOrderTable = ({ orders, userRole, onEdit }) => {
-  const canEdit = userRole !== 'client';
+  const canEdit = userRole == 'advisor';
 
   if (!orders) return <p>Загрузка списка заказ-нарядов...</p>;
   if (orders.length === 0) return <p>Заказ-нарядов пока нет.</p>;

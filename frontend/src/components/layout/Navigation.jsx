@@ -1,7 +1,6 @@
 import React from 'react';
 import { NAV_ITEMS } from '../../data/mockData';
 
-// 1. ВЕРНЫЙ САЙДБАР (копируем твой <nav className="sidebar">)
 export const Sidebar = ({ activeTab, setActiveTab, currentUser, onLogout }) => (
   <nav className="sidebar">
     <div className="sidebar-header">
@@ -44,19 +43,19 @@ export const Header = ({ activeTab, onOpenModal, currentUser }) => {
 
       <div className="header-actions" style={{ display: 'flex', justifyContent: 'flex-end', minWidth: '200px' }}>
 
-        {activeTab === 'work-orders' && ['advisor', 'root'].includes(role) && (
+        {activeTab === 'work-orders' && ['advisor'].includes(role) && (
           <button className="btn-primary" onClick={onOpenModal}>+ Создать ЗН</button>
         )}
 
-        {activeTab === 'clients' && ['admin', 'root'].includes(role) && (
+        {activeTab === 'clients' && ['admin'].includes(role) && (
           <button className="btn-primary" onClick={onOpenModal}>+ Добавить клиента</button>
         )}
 
-        {activeTab === 'applications' && ['admin', 'root', 'advisor'].includes(role) && (
+        {activeTab === 'applications' && ['admin'].includes(role) && (
           <button className="btn-primary" onClick={onOpenModal}>+ Создать заявку</button>
         )}
 
-        {activeTab === 'cars' && ['admin', 'root'].includes(role) && (
+        {activeTab === 'cars' && ['admin'].includes(role) && (
           <button className="btn-primary" onClick={onOpenModal}>+ Добавить авто</button>
         )}
 
@@ -76,9 +75,9 @@ export const Header = ({ activeTab, onOpenModal, currentUser }) => {
           <button className="btn-primary" onClick={onOpenModal}>+ Добавить филиал</button>
         )}
 
-        {activeTab === 'service-catalog' && ['root', 'admin'].includes(role) && (
+        {activeTab === 'service-catalog' && ['root'].includes(role) && (
           <button className="btn-primary" onClick={onOpenModal}>+ Добавить услугу</button>
-        )}
+        )}  
       </div>
     </header>
   );

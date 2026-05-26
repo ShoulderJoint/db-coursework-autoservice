@@ -26,7 +26,6 @@ const ContractModal = ({ isOpen, onClose, onRefresh, vendors }) => {
     try {
       const response = await fetch('http://localhost:3000/logistics/partscontracts', {
         method: 'POST',
-        // ВНИМАНИЕ: При использовании FormData заголовки Content-Type указывать НЕ НАДО!
         body: formData
       });
 
