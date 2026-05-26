@@ -48,7 +48,8 @@ router.post('/login', async (req, res) => {
 
         const payload = { 
             id: user.id, 
-            role: roleMap[user.system_role_id] || (isStaff ? 'admin' : 'client') 
+            role: roleMap[user.system_role_id] || (isStaff ? 'admin' : 'client'),
+            stationId: isStaff ? user.station_id : null
         };
 
         const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES });
@@ -96,7 +97,8 @@ router.put('/password-setup', authMiddleware, async (req, res) => {
         const user = await db.one('SELECT id, login, system_role_id, name, surname, patronymic FROM clients WHERE id = $1', [userId]);
         const payload = { 
             id: user.id, 
-            role: roleMap[user.system_role_id] || 'client' 
+            role: roleMap[user.system_role_id] || 'client',
+            stationId: null 
         };
         
         const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES });

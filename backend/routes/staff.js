@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const bcrypt = require('bcryptjs');
 
 router.get('/', async (req, res) => {
     try {
@@ -48,7 +49,7 @@ router.post('/', async (req, res) => {
         let passwordHash = null;
 
         if (password) {
-            passwordHash = bcrypt.hash(password, 10);
+            passwordHash = await bcrypt.hash(password, 10);
         }
 
         await db.none(`

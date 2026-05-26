@@ -5,7 +5,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        // Базовый запрос, который вытягивает заявки и присоединяет инфу об авто и клиенте
         let query = `
             SELECT 
                 a.id, a.car_id, a.staff_id,
@@ -20,13 +19,15 @@ router.get('/', authMiddleware, async (req, res) => {
         `;
         const params = [];
 
-        // Изоляция данных: если запрашивает клиент, отдаем только его заявки
         if (req.user.role === 'client') {
             query += ' WHERE cl.id = $1';
             params.push(req.user.id);
         }
+        else if (['admin', 'advisor'].includes(req.user.role)) {
+            query += ' WHERE s.station_id = $1';
+            params.push(req.user.stationId);
+        }
 
-        // Сортировка (опционально): сначала новые
         query += ' ORDER BY a.id DESC';
 
         const applications = await db.any(query, params);
