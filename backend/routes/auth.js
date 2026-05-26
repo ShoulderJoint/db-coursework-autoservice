@@ -94,7 +94,10 @@ router.put('/password-setup', authMiddleware, async (req, res) => {
 
         //создание токенов, чтоб не было повторного логина
         const user = await db.one('SELECT id, login, system_role_id, name, surname, patronymic FROM clients WHERE id = $1', [userId]);
-        const payload = { id: user.id, role: user.system_role_id };
+        const payload = { 
+            id: user.id, 
+            role: roleMap[user.system_role_id] || 'client' 
+        };
         
         const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { expiresIn: process.env.ACCESS_TOKEN_EXPIRES });
         const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: process.env.REFRESH_TOKEN_EXPIRES });
@@ -107,7 +110,12 @@ router.put('/password-setup', authMiddleware, async (req, res) => {
         res.status(200).json({
             message: 'Пароль успешно изменен',
             accessToken,
-            user: { id: user.id, login: user.login }
+            user: { 
+                id: user.id, 
+                login: user.login,
+                name: `${user.surname || ''} ${user.name || ''}`.trim(),
+                role: payload.role 
+            }
         });
 
     } catch (error) {

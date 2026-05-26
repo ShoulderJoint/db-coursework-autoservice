@@ -25,9 +25,11 @@ const LoginForm = ({ onLoginSuccess }) => {
 
   const [isFirstLoginMode, setIsFirstLoginMode] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [showMainPassword, setShowMainPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -43,11 +45,14 @@ const LoginForm = ({ onLoginSuccess }) => {
 
       if (response.status === 403) {
         const data = await response.json();
-        if (data.isFirstLogin) {
-          setAccessToken(data.tempToken);
+        if (data.requiresPasswordSetup) {
+          setAccessToken(data.setupToken);
           setIsFirstLoginMode(true);
+        } else {
+          setAuthError(data.error || data.message || 'Доступ запрещен');
         }
-      } else if (response.ok) {
+      }
+      else if (response.ok) {
         const data = await response.json();
         setAccessToken(data.accessToken);
         onLoginSuccess(data.user);
@@ -62,6 +67,11 @@ const LoginForm = ({ onLoginSuccess }) => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
+    setAuthError('');
+
+    if (newPassword !== confirmPassword) {
+      return setAuthError('Пароли не совпадают');
+    }
 
     try {
       const response = await apiFetch('/auth/password-setup', {
@@ -71,9 +81,7 @@ const LoginForm = ({ onLoginSuccess }) => {
 
       if (response.ok) {
         const data = await response.json();
-
         setAccessToken(data.accessToken);
-
         onLoginSuccess(data.user);
       } else {
         const err = await response.json();
@@ -89,8 +97,10 @@ const LoginForm = ({ onLoginSuccess }) => {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100vw', background: '#0f172a', position: 'fixed', top: 0, left: 0, zIndex: 9999 }}>
         <div style={{ background: '#1e293b', padding: '40px', borderRadius: '12px', width: '350px' }}>
-          <h2 style={{ color: '#fff', textAlign: 'center', marginBottom: '10px' }}>Добро пожаловать!</h2>
-          <p style={{ color: '#94a3b8', textAlign: 'center', fontSize: '14px', marginBottom: '20px' }}>В целях безопасности установите свой постоянный пароль.</p>
+          <h2 style={{ color: '#fff', textAlign: 'center', marginBottom: '10px' }}>Установка пароля</h2>
+          <p style={{ color: '#94a3b8', textAlign: 'center', fontSize: '14px', marginBottom: '20px' }}>
+            В целях безопасности установите свой постоянный пароль.
+          </p>
 
           <form onSubmit={handlePasswordChange}>
             <div className="form-group" style={{ marginBottom: '15px' }}>
@@ -124,6 +134,41 @@ const LoginForm = ({ onLoginSuccess }) => {
                 </span>
               </div>
             </div>
+
+            <div className="form-group" style={{ marginBottom: '15px' }}>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Подтвердите пароль"
+                  className="form-control"
+                  style={{ width: '100%', margin: 0, paddingRight: '40px' }}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <span
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '24px',
+                    height: '24px',
+                    background: '#fff'
+                  }}
+                >
+                  {showConfirmPassword ? <IconEye /> : <IconEyeCrossed />}
+                </span>
+              </div>
+            </div>
+
+            {authError && <p style={{ color: '#ef4444', fontSize: '13px', textAlign: 'center', marginBottom: '10px' }}>{authError}</p>}
+            
             <button type="submit" className="btn-primary" style={{ width: '100%' }}>Сохранить и войти</button>
           </form>
         </div>
