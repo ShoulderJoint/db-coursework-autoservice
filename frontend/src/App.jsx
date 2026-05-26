@@ -28,6 +28,8 @@ import ServiceStationsTable from './components/tables/ServiceStations';
 import VendorsTable from './components/tables/VendorsTable';
 import PartsContractsTable from './components/tables/SparePartsContractsTable';
 
+import Dashboard from './components/Dashboard';
+
 import { apiFetch } from './api';
 
 function App() {
@@ -225,22 +227,13 @@ function App() {
             />
             <section id="view-container">
               {activeTab === 'dashboard' && (
-                <div className="dashboard-grid">
-                  <div className="dashboard-card">
-                    <h3>Профиль: {currentUser.name}</h3>
-                    <p>Статус:</p>
-                  </div>
-
-                  {currentUser.role === 'client' && (
-                    <>
-                      <div className="dashboard-card highlight">
-                        <h3>В работе</h3>
-                        {/* Считаем ЗН со статусом "В работе" для этого клиента */}
-                        <div className="big-number">{cars.length} автомобиля(ей)</div>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <Dashboard
+                  currentUser={currentUser}
+                  clients={clients}
+                  cars={cars}
+                  applications={applications}
+                  orders={orders}
+                />
               )}
 
               {activeTab === 'work-orders' && (
