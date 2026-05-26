@@ -4,6 +4,7 @@ const db = require('../db');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -83,7 +84,6 @@ router.post('/vendors', async (req, res) => {
     }
 });
 
-// Обновление поставщика
 router.put('/vendors/:id', async (req, res) => {
     const { name, region, city, street, house, flat, postcode, inn, phone } = req.body;
     try {
@@ -130,6 +130,25 @@ router.post('/partscontracts', upload.single('contractFile'), async (req, res) =
         res.status(201).json({ message: 'Договор добавлен' });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+router.put('/partscontracts/:id', authMiddleware, async (req, res) => {
+    const { id } = req.params;
+    const { vendorId, fileName } = req.body;
+
+    try {
+        await db.none(`
+            UPDATE spare_parts_contracts 
+            SET vendor_id = $1, 
+                file_name = $2, 
+                updated_at = NOW()
+            WHERE id = $3
+        `, [ vendorId, fileName, id]);
+
+        res.json({ message: 'Договор успешно обновлен' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Ошибка при обновлении договора' });
     }
 });
 

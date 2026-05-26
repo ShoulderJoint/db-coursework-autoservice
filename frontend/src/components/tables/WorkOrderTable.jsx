@@ -1,6 +1,6 @@
 import React from 'react';
 
-const WorkOrderTable = ({ orders, userRole, onEdit }) => {
+const WorkOrderTable = ({ orders, userRole, onEdit, onViewApplication }) => {
   const canEdit = userRole == 'advisor';
 
   if (!orders) return <p>Загрузка списка заказ-нарядов...</p>;
@@ -42,7 +42,15 @@ const WorkOrderTable = ({ orders, userRole, onEdit }) => {
         {orders.map(order => (
           <tr key={order.order_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
             <td>{order.order_id}</td>
-            <td>{order.application_id}</td>
+            <td>
+              <span
+                style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}
+                onClick={() => onViewApplication(order.application_id)}
+                title="Посмотреть данные заявки"
+              >
+                {order.application_id}
+              </span>
+            </td>
             <td>{formatFullName(order.staff_surname, order.staff_name, order.staff_patronymic)}</td>
             <td>{formatAddress(order.city, order.street, order.house)}</td>
             <td>
@@ -56,8 +64,8 @@ const WorkOrderTable = ({ orders, userRole, onEdit }) => {
             <td>{formatDate(order.closed_at)}</td>
             {canEdit && (
               <td>
-                <button 
-                  className="btn-primary" 
+                <button
+                  className="btn-primary"
                   style={{ padding: '6px 12px', cursor: 'pointer' }}
                   onClick={() => onEdit(order)}
                 >

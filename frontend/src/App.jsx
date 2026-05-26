@@ -15,6 +15,7 @@ import ContractModal from './components/modals/ContractModal';
 import StaffModal from './components/modals/StaffModal';
 import StationModal from './components/modals/StationModal';
 import ServiceCatalogModal from './components/modals/ServiceCatalogModal';
+import ApplicationInfoModal from './components/modals/ApplicationInfoModal';
 import LoginForm from './components/layout/LoginForm';
 import { Sidebar, Header } from './components/layout/Navigation';
 import WorkOrderTable from './components/tables/WorkOrderTable';
@@ -31,7 +32,6 @@ import { apiFetch } from './api';
 
 function App() {
 
-  // Текущий пользователь (изначально пустой)
   const [currentUser, setCurrentUser] = useState(null);
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -55,6 +55,7 @@ function App() {
   const [selectedVendor, setSelectedVendor] = useState(null);
 
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [selectedContract, setSelectedContract] = useState(null);
   const [contracts, setContracts] = useState([]);
 
   const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
@@ -67,11 +68,14 @@ function App() {
   const [isServiceCatalogModalOpen, setIsServiceCatalogModalOpen] = useState(false);
   const [selectedCatalogService, setSelectedCatalogService] = useState(null);
 
+  const [isAppViewOpen, setIsAppViewOpen] = useState(false);
+  const [viewingApplication, setViewingApplication] = useState(null);
+
   const loadDataArray = async (endpoint, stateSetter, errorLabel) => {
     try {
       const response = await apiFetch(endpoint);
       const data = await response.json();
-      
+
       if (Array.isArray(data)) {
         stateSetter(data);
       } else {
@@ -106,6 +110,7 @@ function App() {
         setIsVendorModalOpen(true);
         break;
       case 'contracts':
+        setSelectedContract(null);
         setIsContractModalOpen(true);
         break;
       case 'staff':
@@ -126,11 +131,24 @@ function App() {
     }
   };
 
-  // Управление вкладками
   const handleTabClick = (tab) => setActiveTab(tab);
 
   const handleLoginSuccess = (user) => {
     setCurrentUser(user);
+  };
+
+  const handleLogout = async () => {
+    try {
+      //запрос на удаление httpOnly куки
+      await apiFetch('/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Ошибка при выходе на сервере:', error);
+    } finally {
+
+      setCurrentUser(null);
+
+      window.location.reload();
+    }
   };
 
   const loadClients = () => loadDataArray('/clients', setClients, 'Клиенты');
@@ -173,7 +191,6 @@ function App() {
   const [vendors, setVendors] = useState([]);
 
   useEffect(() => {
-    // Делаем запросы ТОЛЬКО если пользователь авторизован (currentUser не null)
     if (currentUser) {
       loadClients();
       loadCars();
@@ -193,16 +210,14 @@ function App() {
         <LoginForm onLoginSuccess={handleLoginSuccess} />
       ) : (
         <>
-          {/* Сайдбар стоял тут первым */}
           <Sidebar
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             currentUser={currentUser}
-            onLogout={() => setCurrentUser(null)}
+            onLogout={handleLogout}
           />
 
           <main className="content">
-            {/* Шапка стояла внутри main сразу первым элементом */}
             <Header
               activeTab={activeTab}
               currentUser={currentUser}
@@ -235,6 +250,11 @@ function App() {
                   onEdit={(order) => {
                     setSelectedOrderId(order.order_id);
                     setIsDetailsOpen(true);
+                  }}
+                  onViewApplication={(appId) => {
+                    const app = applications.find(a => Number(a.id) === Number(appId));
+                    setViewingApplication(app);
+                    setIsAppViewOpen(true);
                   }}
                 />
               )}
@@ -316,6 +336,10 @@ function App() {
                   contracts={contracts}
                   onRefresh={loadContracts}
                   userRole={currentUser.role}
+                  onEdit={(contract) => {
+                    setSelectedContract(contract);
+                    setIsContractModalOpen(true);
+                  }}
                 />
               )}
             </section>
@@ -369,9 +393,13 @@ function App() {
           />
           <ContractModal
             isOpen={isContractModalOpen}
-            onClose={() => setIsContractModalOpen(false)}
+            onClose={() => {
+              setIsContractModalOpen(false);
+              setSelectedContract(null);
+            }}
             onRefresh={loadContracts}
             vendors={vendors}
+            contractToEdit={selectedContract}
           />
           <StaffModal
             isOpen={isStaffModalOpen}
@@ -391,6 +419,14 @@ function App() {
             onClose={() => setIsServiceCatalogModalOpen(false)}
             onRefresh={loadServices}
             serviceToEdit={selectedCatalogService}
+          />
+          <ApplicationInfoModal
+            isOpen={isAppViewOpen}
+            onClose={() => {
+              setIsAppViewOpen(false);
+              setViewingApplication(null);
+            }}
+            application={viewingApplication}
           />
         </>
       )}

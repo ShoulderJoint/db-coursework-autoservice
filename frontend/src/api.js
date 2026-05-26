@@ -13,6 +13,10 @@ export const apiFetch = async (endpoint, options = {}) => {
         ...options.headers,
     };
 
+    if (!(options.body instanceof FormData)) {
+        headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    }
+
     if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
     }

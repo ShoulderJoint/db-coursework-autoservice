@@ -21,7 +21,7 @@ router.post('/login', async (req, res) => {
 
         if (!user) {
             user = await db.oneOrNone('SELECT * FROM staff WHERE login = $1 AND is_active = true', [login]);
-            isStaff = true; // Ставим флажок, что это работник
+            isStaff = true;
         }
 
         if (!user) {
@@ -114,6 +114,15 @@ router.put('/password-setup', authMiddleware, async (req, res) => {
         console.error('Ошибка при установке пароля:', error);
         res.status(500).json({ error: 'Внутренняя ошибка сервера' });
     }
+});
+
+router.post('/logout', (req, res) => {
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        //secure:true //потенциальный https
+    });
+    
+    res.status(200).json({ message: 'Выход успешно выполнен' });
 });
 
 module.exports = router;
