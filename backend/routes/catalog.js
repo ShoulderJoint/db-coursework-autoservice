@@ -3,8 +3,6 @@ const router = express.Router();
 const db = require('../db');
 const authMiddleware = require('../middleware/authMiddleware');
 
-router.use(authMiddleware);
-
 router.get('/', async (req, res) => {
     try {
         const services = await db.any('SELECT * FROM services');
@@ -13,6 +11,8 @@ router.get('/', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
     const { name, price } = req.body;

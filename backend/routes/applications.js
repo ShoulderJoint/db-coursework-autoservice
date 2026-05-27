@@ -3,6 +3,54 @@ const router = express.Router();
 const db = require('../db'); 
 const authMiddleware = require('../middleware/authMiddleware');
 
+router.post('/public', async (req, res) => {
+    const { name, surname, phone, email, brand, model, comment, service_name } = req.body;
+
+    try {
+        await db.tx(async t => {
+            // 1. Ищем клиента по телефону
+            let client = await t.oneOrNone('SELECT id FROM clients WHERE phone = $1', [phone]);
+            
+            if (!client) {
+                client = await t.one(`
+                    INSERT INTO clients (name, surname, phone, email) 
+                    VALUES ($1, $2, $3, $4) RETURNING id
+                `, [name, surname, phone, email]);
+            }
+
+            // 2. Ищем машину этого клиента
+            let car = await t.oneOrNone(`
+                SELECT id FROM cars 
+                WHERE client_id = $1 AND brand ILIKE $2 AND model ILIKE $3
+            `, [client.id, brand, model]);
+
+            // Если машины нет — добавляем, передавая null вместо заглушек
+            if (!car) {
+                car = await t.one(`
+                    INSERT INTO cars (client_id, brand, model, reg_number, vin) 
+                    VALUES ($1, $2, $3, $4, $5) RETURNING id
+                `, [client.id, brand, model, null, null]);
+            }
+
+            // 3. Формируем текст заявки без приписки
+            const fullDescription = service_name 
+                ? `Услуга: ${service_name}. ${comment}`.trim() 
+                : comment;
+
+            // Создаем заявку
+            await t.none(`
+                INSERT INTO applications (car_id, staff_id, description, created_at)
+                VALUES ($1, $2, $3, NOW())
+            `, [car.id, null, fullDescription]);
+        });
+
+        res.status(201).json({ message: 'Заявка принята' });
+    } catch (error) {
+        console.error('Ошибка при сохранении заявки с сайта:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера' });
+    }
+});
+
 router.get('/', authMiddleware, async (req, res) => {
     try {
         let query = `

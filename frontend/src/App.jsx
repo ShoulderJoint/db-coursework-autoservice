@@ -201,6 +201,8 @@ function App() {
   const [vendors, setVendors] = useState([]);
 
   useEffect(() => {
+    loadServices();
+    loadStations();
     if (currentUser) {
       loadClients();
       loadCars();
@@ -208,8 +210,6 @@ function App() {
       loadVendors();
       loadContracts();
       loadStaff();
-      loadStations();
-      loadServices();
       loadOrders();
     }
   }, [currentUser]);
@@ -218,12 +218,12 @@ function App() {
     <div className="app-container">
       {!currentUser ? (
         !showLogin ? (
-          <LandingPage onLoginClick={() => setShowLogin(true)} />
+          <LandingPage onLoginClick={() => setShowLogin(true)} services={services} stations={stations} />
         ) : (
           <LoginForm
             onLoginSuccess={(user) => {
               setCurrentUser(user);
-              setShowLogin(false); 
+              setShowLogin(false);
             }}
             onBackToLanding={() => setShowLogin(false)}
           />
