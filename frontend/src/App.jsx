@@ -32,6 +32,8 @@ import PartsContractsTable from './components/tables/SparePartsContractsTable';
 
 import Dashboard from './components/Dashboard';
 
+import LandingPage from './components/layout/LandingPage';
+
 import { apiFetch } from './api';
 
 function App() {
@@ -76,6 +78,8 @@ function App() {
   const [viewingApplication, setViewingApplication] = useState(null);
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const [showLogin, setShowLogin] = useState(false);
 
   const loadDataArray = async (endpoint, stateSetter, errorLabel) => {
     try {
@@ -213,7 +217,17 @@ function App() {
   return (
     <div className="app-container">
       {!currentUser ? (
-        <LoginForm onLoginSuccess={handleLoginSuccess} />
+        !showLogin ? (
+          <LandingPage onLoginClick={() => setShowLogin(true)} />
+        ) : (
+          <LoginForm
+            onLoginSuccess={(user) => {
+              setCurrentUser(user);
+              setShowLogin(false); 
+            }}
+            onBackToLanding={() => setShowLogin(false)}
+          />
+        )
       ) : (
         <>
           <Sidebar

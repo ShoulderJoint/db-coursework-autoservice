@@ -18,7 +18,7 @@ const IconEyeCrossed = () => (
   </svg>
 );
 
-const LoginForm = ({ onLoginSuccess }) => {
+const LoginForm = ({ onLoginSuccess, onBackToLanding }) => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
@@ -230,6 +230,13 @@ const LoginForm = ({ onLoginSuccess }) => {
           </div>
           {authError && <p style={{ color: '#ef4444', fontSize: '13px', textAlign: 'center' }}>{authError}</p>}
           <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '10px' }}>Войти</button>
+          <button 
+            type="button" 
+            onClick={onBackToLanding} 
+            style={{ width: '100%', marginTop: '12px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '14px' }}
+          >
+            ← Вернуться на главный сайт
+          </button>
         </form>
       </div>
     </div>
