@@ -55,7 +55,8 @@ test('Post order', async () => {
         .expect('Content-Type', /json/)
     expect(res.statusCode).toBe(201);
 
-    createdOrderId = res.body.id || res.body.orderId;
+    const latestOrder = await db.one('SELECT id FROM orders ORDER BY id DESC LIMIT 1');
+    createdOrderId = latestOrder.id;
 });
 
 test('Put status in order', async () => {

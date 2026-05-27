@@ -15,7 +15,7 @@ jest.mock('../../middleware/authMiddleware', () => {
     };
 });
 
-describe.skip('Unit Test: Get order by ID', () => {
+describe('Unit Test: Get order by ID', () => {
     it('Should make a get request', async () => {
         db.one.mockResolvedValue({ 
             id: 1, 
