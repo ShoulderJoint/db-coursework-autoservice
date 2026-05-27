@@ -99,4 +99,52 @@ router.put('/:id', async (req, res) => {
     }
 });
 
+router.post('/:id/grant-access', async (req, res) => {
+    const clientId = req.params.id;
+
+    try {
+        // 1. Получаем данные клиента
+        const client = await db.oneOrNone('SELECT name, patronymic, surname, email FROM clients WHERE id = $1', [clientId]);
+
+        if (!client) {
+            return res.status(404).json({ error: 'Клиент не найден' });
+        }
+
+        if (!client.email) {
+            return res.status(400).json({ error: 'У клиента не указан email для отправки пароля' });
+        }
+
+        // 2. Подготавливаем безопасные строки для генератора логина
+        // Если отчества или фамилии нет, подставляем дефолтные буквы/слова, чтобы избежать ошибки .charAt(0)
+        const safeName = client.name || 'user';
+        const safePatronymic = client.patronymic || 'x'; 
+        const safeSurname = client.surname || 'client';
+
+        const login = await generateUniqueLogin(db, safeName, safePatronymic, safeSurname);
+
+        // 3. Генерируем пароль
+        const rawPassword = crypto.randomBytes(4).toString('hex');
+        const hashedPassword = await bcrypt.hash(rawPassword, 10);
+
+        // 4. Обновляем запись (system_role_id = 1 — это роль клиента)
+        await db.none(`
+            UPDATE clients 
+            SET login = $1, password_hash = $2, system_role_id = 1 
+            WHERE id = $3
+        `, [login, hashedPassword, clientId]);
+
+        // 5. Отправляем письмо
+        const emailSent = await sendPasswordEmail(client.email, login, rawPassword);
+        
+        if (!emailSent) {
+            console.log(`[ОШИБКА ПОЧТЫ] Данные для ${client.surname || client.name}: Логин - ${login}, Пароль - ${rawPassword}`);
+        }
+
+        res.status(200).json({ message: 'Доступ успешно выдан, письмо отправлено' });
+    } catch (error) {
+        console.error('Ошибка выдачи доступа:', error);
+        res.status(500).json({ error: 'Внутренняя ошибка сервера при генерации доступов' });
+    }
+});
+
 module.exports = router;

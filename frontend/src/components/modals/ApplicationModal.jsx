@@ -64,7 +64,7 @@ const ApplicationModal = ({ isOpen, onClose, applicationToEdit, onRefresh, cars,
                         {cars.map(c => (
                             // Передаем строку в value
                             <option key={c.id} value={String(c.id)}>
-                                {c.brand} {c.model} ({c.reg_number})
+                                {c.brand} {c.model} {c.reg_number ? `(${c.reg_number})` : ''}
                             </option>
                         ))}
                     </select>

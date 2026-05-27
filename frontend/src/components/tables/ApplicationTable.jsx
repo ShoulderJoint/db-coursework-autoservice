@@ -30,7 +30,7 @@ const ApplicationTable = ({ applications, onEdit, userRole }) => {
         {applications.map(app => (
           <tr key={app.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
             <td>{app.id}</td>
-            <td>{app.brand} {app.model} ({app.reg_number})</td>
+            <td>{app.brand} {app.model} {app.reg_number ? `(${app.reg_number})` : ''}</td>
             <td>{`${app.staff_surname || ''} ${app.staff_name || ''}`.trim()}</td>
             <td>{app.description}</td>
             <td>{formatDate(app.created_at)}</td>
