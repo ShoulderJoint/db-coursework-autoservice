@@ -155,7 +155,7 @@ const handleSubmit = async (e) => {
                 <label>Филиал исполнения:</label>
                 <select value={orderData.stationId} onChange={(e) => setOrderData({ ...orderData, stationId: e.target.value })}>
                   <option value="">Выберите филиал...</option>
-                  {stations.map(st => <option key={st.id} value={st.id}>{st.city}, {st.street}</option>)}
+                  {stations.map(st => <option key={st.id} value={st.id}>{st.city},{st.street}, {st.house}</option>)}
                 </select>
               </div>
               <div className="form-group">
@@ -179,8 +179,8 @@ const handleSubmit = async (e) => {
                   {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
                 <input type="number" value={row.price} readOnly placeholder="Цена" />
-                <input type="number" step="0.1" value={row.coeff} onChange={(e) => updateRow(row.rowId, 'coeff', e.target.value)} placeholder="Коэфф." />
-                <input type="number" value={row.count} onChange={(e) => updateRow(row.rowId, 'count', e.target.value)} placeholder="Кол-во" />
+                <input type="number" step="0.1" value={row.coeff} min="0.1" onChange={(e) => updateRow(row.rowId, 'coeff', e.target.value)} placeholder="Коэфф." />
+                <input type="number" value={row.count} min="1" onChange={(e) => updateRow(row.rowId, 'count', e.target.value)} placeholder="Кол-во" />
                 <input type="number" value={row.cost.toFixed(2)} readOnly style={{ backgroundColor: '#f1f5f9' }} />
               </div>
             ))}

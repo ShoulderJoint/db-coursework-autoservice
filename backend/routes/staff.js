@@ -64,14 +64,30 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-    const { station_id, surname, name, patronymic, role_id, login, system_role_id, is_active } = req.body;
+    
+    const { station_id, surname, name, patronymic, role_id, login, password, system_role_id, is_active } = req.body;
+    
     try {
-        await db.none(`
-            UPDATE staff 
-            SET station_id = $1, surname = $2, name = $3, patronymic = $4, 
-                role_id = $5, login = $6, system_role_id = $7, is_active = $8
-            WHERE id = $9
-        `, [station_id, surname, name, patronymic || null, role_id, login, system_role_id, is_active, req.params.id]);
+        if (password && password.trim() !== '') {
+
+            const hashedPassword = await bcrypt.hash(password, 10);
+            
+            await db.none(`
+                UPDATE staff 
+                SET station_id = $1, surname = $2, name = $3, patronymic = $4, 
+                    role_id = $5, login = $6, password_hash = $7, system_role_id = $8, is_active = $9
+                WHERE id = $10
+            `, [station_id, surname, name, patronymic || null, role_id, login, hashedPassword, system_role_id, is_active, req.params.id]);
+            
+        } else {
+            
+            await db.none(`
+                UPDATE staff 
+                SET station_id = $1, surname = $2, name = $3, patronymic = $4, 
+                    role_id = $5, login = $6, system_role_id = $7, is_active = $8
+                WHERE id = $9
+            `, [station_id, surname, name, patronymic || null, role_id, login, system_role_id, is_active, req.params.id]);
+        }
 
         res.json({ message: 'Данные сотрудника обновлены' });
     } catch (error) {

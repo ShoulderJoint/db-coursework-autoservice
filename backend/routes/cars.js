@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.get('/', authMiddleware, async (req, res) => {
     try {
         let query = `
-            SELECT c.*, cl.patronymic as client_patronymic, cl.name as client_name, cl.surname as client_name 
+            SELECT c.*, cl.patronymic as client_patronymic, cl.name as client_name, cl.surname as client_surname 
             FROM cars c
             JOIN clients cl ON c.client_id = cl.id
         `;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const StaffTable = ({ staff, userRole, onEdit }) => {
+  
   const canEdit = userRole === 'root';
 
   if (!staff) return <p>Загрузка данных из базы...</p>;

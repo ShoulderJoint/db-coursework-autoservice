@@ -4,7 +4,7 @@ import { apiFetch } from '../../api'; // Импортируем нашу фун�
 // 1. Добавили onEdit в деструктуризацию пропсов
 const PartsContractsTable = ({ contracts, onRefresh, userRole, onEdit }) => {
 
-  const canEdit = userRole === 'advisor';
+  const canEdit = ['advisor', 'root'].includes(userRole);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Вы уверены, что хотите удалить этот договор? Файл будет стерт с сервера.')) return;

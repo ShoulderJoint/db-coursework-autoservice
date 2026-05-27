@@ -26,7 +26,7 @@ const WorkOrderTable = ({ orders, userRole, onEdit, onViewApplication }) => {
     <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
       <thead>
         <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
-          <th>ID</th>
+          <th>Номер Заказ-наряда</th>
           <th>ID заявки</th>
           <th>Мастер-приёмщик</th>
           <th>Филиал</th>
@@ -41,7 +41,7 @@ const WorkOrderTable = ({ orders, userRole, onEdit, onViewApplication }) => {
       <tbody>
         {orders.map(order => (
           <tr key={order.order_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-            <td>{order.order_id}</td>
+            <td><strong>{order.public_number || order.order_id}</strong></td>
             <td>
               <span
                 style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline', fontWeight: 'bold' }}

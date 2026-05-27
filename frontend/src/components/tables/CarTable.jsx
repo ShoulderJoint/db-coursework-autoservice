@@ -27,7 +27,7 @@ const CarTable = ({ cars, onEdit, userRole }) => {
           <tr key={car.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
             <td>{car.id}</td>
             {showOwner && (
-              <td>{`${car.client_surname || ''} ${car.client_name || ''} ${car.client_patronymic}`.trim() || '—'}</td>
+              <td>{`${car.client_surname || ''} ${car.client_name || ''} ${car.client_patronymic || ''}`.trim() || '—'}</td>
             )}
             <td>{car.brand} {car.model}</td>
             <td>{car.production_year}</td>

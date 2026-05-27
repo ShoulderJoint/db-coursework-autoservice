@@ -8,6 +8,7 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
   const [catalogServices, setCatalogServices] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [currentStatusId, setCurrentStatusId] = useState('');
+  const [publicNumber, setPublicNumber] = useState('');
 
   // Состояния для форм добавления позиций
   const [newPart, setNewPart] = useState({ sparePartId: '', count: 1, cost: 0 });
@@ -28,6 +29,8 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
     }
   }, [isOpen, orderId]);
 
+  const isReadOnly = [4, 6].includes(Number(currentStatusId));
+
   const loadOrderData = async () => {
     try {
       //услуги ЗН
@@ -42,6 +45,7 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
       const resOrder = await apiFetch(`/orders/${orderId}`);
       const orderData = await resOrder.json();
       setCurrentStatusId(orderData.status_id);
+      setPublicNumber(orderData.public_number);
     } catch (err) {
       console.error('Ошибка загрузки данных заказ-наряда:', err);
     }
@@ -219,7 +223,7 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
 
         {/* Панель управления шапки */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #f1f5f9', paddingBottom: '15px' }}>
-          <h2 style={{ margin: 0 }}>Заказ-наряд №{orderId}</h2>
+          <h2 style={{ margin: 0 }}>{publicNumber ? publicNumber : `Заказ-наряд №${orderId}`}</h2>
           <div>
             <label style={{ marginRight: '10px', fontWeight: 'bold' }}>Текущий статус:</label>
             <select
@@ -252,32 +256,35 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
                 <td>{s.count} шт.</td>
                 <td>{s.coefficient}</td>
                 <td>{parseFloat(s.cost).toLocaleString('ru-RU')} руб.</td>
-                <td style={{ textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteService(s.id)}
-                    style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
-                    title="Удалить услугу"
-                  >
-                    ✕
-                  </button>
-                </td>
+                {!isReadOnly && (
+                  <td style={{ textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteService(s.id)}
+                      style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
+                      title="Удалить услугу"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Форма новой услуги */}
-        <form onSubmit={handleAddService} style={{ display: 'flex', gap: '10px', marginBottom: '30px', background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-          <select value={newService.serviceId} onChange={(e) => handleServiceSelect(e.target.value)} style={{ flex: 3, padding: '6px' }}>
-            <option value="">-- Добавить работу/операцию --</option>
-            {catalogServices.map(cs => <option key={cs.id} value={cs.id}>{cs.name} ({cs.price} руб.)</option>)}
-          </select>
-          <input type="number" placeholder="Кол-во" min="1" value={newService.count} onChange={(e) => handleServiceParamChange('count', parseInt(e.target.value) || 1)} style={{ width: '65px', padding: '6px' }} />
-          <input type="number" placeholder="Коэфф." step="0.1" min="0.1" value={newService.coeff} onChange={(e) => handleServiceParamChange('coeff', parseFloat(e.target.value) || 1)} style={{ width: '65px', padding: '6px' }} />
-          <input type="text" value={`${newService.cost.toFixed(2)} руб.`} readOnly style={{ width: '110px', padding: '6px', backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', textAlign: 'center', borderRadius: '4px' }} />
-          <button type="submit" style={{ padding: '6px 14px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+</button>
-        </form>
+        {!isReadOnly && (
+          <form onSubmit={handleAddService} style={{ display: 'flex', gap: '10px', marginBottom: '30px', background: '#f8fafc', padding: '12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+            <select value={newService.serviceId} onChange={(e) => handleServiceSelect(e.target.value)} style={{ flex: 3, padding: '6px' }}>
+              <option value="">-- Добавить работу/операцию --</option>
+              {catalogServices.map(cs => <option key={cs.id} value={cs.id}>{cs.name} ({cs.price} руб.)</option>)}
+            </select>
+            <input type="number" placeholder="Кол-во" min="1" value={newService.count} onChange={(e) => handleServiceParamChange('count', parseInt(e.target.value) || 1)} style={{ width: '65px', padding: '6px' }} />
+            <input type="number" placeholder="Коэфф." step="0.1" min="0.1" value={newService.coeff} onChange={(e) => handleServiceParamChange('coeff', parseFloat(e.target.value) || 1)} style={{ width: '65px', padding: '6px' }} />
+            <input type="text" value={`${newService.cost.toFixed(2)} руб.`} readOnly style={{ width: '110px', padding: '6px', backgroundColor: '#e2e8f0', border: '1px solid #cbd5e1', textAlign: 'center', borderRadius: '4px' }} />
+            <button type="submit" style={{ padding: '6px 14px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+</button>
+          </form>
+        )}
 
         {/* БЛОК КОМПЛЕКТУЮЩИХ */}
         <h3 style={{ margin: '15px 0 10px 0' }}>Установленные комплектующие</h3>
@@ -302,96 +309,99 @@ const WorkOrderDetailsModal = ({ isOpen, onClose, orderId }) => {
                 </td>
                 <td>{p.count} шт.</td>
                 <td>{parseFloat(p.cost).toLocaleString('ru-RU')} руб.</td>
-                <td style={{ textAlign: 'center' }}>
-                  <button
-                    type="button"
-                    onClick={() => handleDeletePart(p.id)}
-                    style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
-                    title="Удалить деталь"
-                  >
-                    ✕
-                  </button>
-                </td>
+                {!isReadOnly && (
+                  <td style={{ textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePart(p.id)}
+                      style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '16px', padding: '4px' }}
+                      title="Удалить деталь"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
 
-        {/* Форма новой запчасти */}
-        <form onSubmit={handleAddPart} style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '15px',
-          marginTop: '20px',
-          padding: '15px',
-          background: '#f8fafc',
-          borderRadius: '8px',
-          border: '1px solid #e2e8f0',
-          width: '100%',
-          boxSizing: 'border-box'
-        }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', width: '160px', flexShrink: 0, fontSize: '14px' }}>
-            <input
-              type="checkbox"
-              checked={isClientPart}
-              onChange={(e) => {
-                setIsClientPart(e.target.checked);
-                if (e.target.checked) setSelectedPartId('');
-                else setClientPartName('');
-              }}
-            />
-            <span>Деталь<br />предоставлена<br />клиентом</span>
-          </label>
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {isClientPart ? (
+        {!isReadOnly && (
+          <form onSubmit={handleAddPart} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '15px',
+            marginTop: '20px',
+            padding: '15px',
+            background: '#f8fafc',
+            borderRadius: '8px',
+            border: '1px solid #e2e8f0',
+            width: '100%',
+            boxSizing: 'border-box'
+          }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', width: '160px', flexShrink: 0, fontSize: '14px' }}>
               <input
-                type="text"
-                placeholder="Название детали..."
-                required
-                value={clientPartName}
-                onChange={(e) => setClientPartName(e.target.value)}
-                style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                type="checkbox"
+                checked={isClientPart}
+                onChange={(e) => {
+                  setIsClientPart(e.target.checked);
+                  if (e.target.checked) setSelectedPartId('');
+                  else setClientPartName('');
+                }}
               />
-            ) : (
-              <select
-                required
-                value={selectedPartId}
-                onChange={(e) => setSelectedPartId(e.target.value)}
-                style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
-              >
-                <option value="">-- Выберите деталь со склада --</option>
-                {catalogParts && catalogParts.map(part => (
-                  <option key={part.id} value={String(part.id)}>
-                    {part.name} (В наличии: {part.stock})
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
+              <span>Деталь<br />предоставлена<br />клиентом</span>
+            </label>
 
-          <input
-            type="number"
-            min="1"
-            placeholder="Кол-во"
-            required
-            value={partCount}
-            onChange={(e) => setPartCount(e.target.value)}
-            style={{ padding: '8px', width: '70px', flexShrink: 0, boxSizing: 'border-box' }}
-          />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {isClientPart ? (
+                <input
+                  type="text"
+                  placeholder="Название детали..."
+                  required
+                  value={clientPartName}
+                  onChange={(e) => setClientPartName(e.target.value)}
+                  style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                />
+              ) : (
+                <select
+                  required
+                  value={selectedPartId}
+                  onChange={(e) => setSelectedPartId(e.target.value)}
+                  style={{ padding: '8px', width: '100%', boxSizing: 'border-box' }}
+                >
+                  <option value="">-- Выберите деталь со склада --</option>
+                  {catalogParts && catalogParts.map(part => (
+                    <option key={part.id} value={String(part.id)}>
+                      {part.name} (В наличии: {part.stock})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
 
-          <div style={{ width: '90px', flexShrink: 0, fontSize: '13px', lineHeight: '1.2' }}>
-            {isClientPart ? (
-              <span style={{ fontWeight: 'bold' }}>Стоимость:<br />0 руб.</span>
-            ) : (
-              <span style={{ fontWeight: 'bold' }}>Стоимость<br />со склада</span>
-            )}
-          </div>
+            <input
+              type="number"
+              min="1"
+              placeholder="Кол-во"
+              required
+              value={partCount}
+              onChange={(e) => setPartCount(e.target.value)}
+              style={{ padding: '8px', width: '70px', flexShrink: 0, boxSizing: 'border-box' }}
+            />
 
-          <button type="submit" className="btn-primary" style={{ flexShrink: 0, padding: '8px 16px', whiteSpace: 'nowrap' }}>
-            Добавить в<br />заказ-наряд
-          </button>
-        </form>
+            <div style={{ width: '90px', flexShrink: 0, fontSize: '13px', lineHeight: '1.2' }}>
+              {isClientPart ? (
+                <span style={{ fontWeight: 'bold' }}>Стоимость:<br />0 руб.</span>
+              ) : (
+                <span style={{ fontWeight: 'bold' }}>Стоимость<br />со склада</span>
+              )}
+            </div>
+
+            <button type="submit" className="btn-primary" style={{ flexShrink: 0, padding: '8px 16px', whiteSpace: 'nowrap' }}>
+              Добавить в<br />заказ-наряд
+            </button>
+          </form>
+        )}
 
         {/* Подвал */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '25px', borderTop: '1px solid #e2e8f0', paddingTop: '15px' }}>

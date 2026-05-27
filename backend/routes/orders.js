@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
         if (req.user.role === 'client') {
             orders = await db.any(`
                 SELECT 
-                    o.id AS order_id, a.id AS application_id, s.surname AS staff_surname, s.name AS staff_name, s.patronymic AS staff_patronymic,
+                    o.id AS order_id, o.public_number, a.id AS application_id, s.surname AS staff_surname, s.name AS staff_name, s.patronymic AS staff_patronymic,
                     st.region, st.city, st.street, st.house, os.name AS status_name, o.cost_parts, o.cost_services, o.cost,
                     o.created_at, o.closed_at, c.brand, c.model, c.reg_number
                 FROM orders o
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
             // ИЗОЛЯЦИЯ: Локальные сотрудники видят только свой филиал
             orders = await db.any(`
                 SELECT 
-                    o.id AS order_id, a.id AS application_id, s.surname AS staff_surname, s.name AS staff_name, s.patronymic AS staff_patronymic,
+                    o.id AS order_id, o.public_number, a.id AS application_id, s.surname AS staff_surname, s.name AS staff_name, s.patronymic AS staff_patronymic,
                     st.region, st.city, st.street, st.house, os.name AS status_name, o.cost_parts, o.cost_services, o.cost,
                     o.created_at, o.closed_at, c.brand, c.model, c.reg_number,
                     cl.surname AS client_surname, cl.name AS client_name, cl.patronymic AS client_patronymic
@@ -48,7 +48,7 @@ router.get('/', async (req, res) => {
             // ROOT: Видит все заказ-наряды сети
             orders = await db.any(`
                 SELECT 
-                    o.id AS order_id, a.id AS application_id, s.surname AS staff_surname, s.name AS staff_name, s.patronymic AS staff_patronymic,
+                    o.id AS order_id, o.public_number, a.id AS application_id, s.surname AS staff_surname, s.name AS staff_name, s.patronymic AS staff_patronymic,
                     st.region, st.city, st.street, st.house, os.name AS status_name, o.cost_parts, o.cost_services, o.cost,
                     o.created_at, o.closed_at, c.brand, c.model, c.reg_number,
                     cl.surname AS client_surname, cl.name AS client_name, cl.patronymic AS client_patronymic
@@ -116,7 +116,7 @@ router.get('/statuses', async (req, res) => {
 // 2. Получение базовой информации о ЗН (чтобы узнать его текущий статус)
 router.get('/:id', async (req, res) => {
     try {
-        const order = await db.one('SELECT id, status_id FROM orders WHERE id = $1', [req.params.id]);
+        const order = await db.one('SELECT id, status_id, public_number, FROM orders WHERE id = $1', [req.params.id]);
         res.json(order);
     } catch (error) {
         res.status(500).json({ error: error.message });
