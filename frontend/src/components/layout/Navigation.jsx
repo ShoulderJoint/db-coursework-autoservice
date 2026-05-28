@@ -6,12 +6,10 @@ export const Sidebar = ({ activeTab, setActiveTab, currentUser, onLogout, onOpen
     <div className="sidebar-header">
       <span className="logo-text">СТО Система</span>
       
-      {/* Исправлено отображение имени пользователя */}
       <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '10px' }}>
         Вы вошли как: <br /><strong>{currentUser?.name}</strong>
       </div>
       
-      {/* Добавлен блок с кнопками профиля и выхода */}
       <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
         {currentUser?.role === 'client' && (
           <button
