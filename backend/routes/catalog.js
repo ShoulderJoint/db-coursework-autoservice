@@ -15,12 +15,12 @@ router.get('/', async (req, res) => {
 router.use(authMiddleware);
 
 router.post('/', async (req, res) => {
-    const { name, price } = req.body;
+    const { name, price, description, estimated_time_minutes } = req.body;
     try {
         await db.none(`
-            INSERT INTO services (name, price)
-            VALUES ($1, $2)
-        `, [name, parseFloat(price)]);
+            INSERT INTO services (name, price, description, estimated_time_minutes)
+            VALUES ($1, $2, $3, $4)
+        `, [name, parseFloat(price), description, parseInt(estimated_time_minutes, 10)]);
         res.status(201).json({ message: 'Услуга добавлена в каталог' });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -28,13 +28,13 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-    const { name, price } = req.body;
+    const { name, price, description, estimated_time_minutes } = req.body;
     try {
         await db.none(`
             UPDATE services 
-            SET name = $1, price = $2
-            WHERE id = $3
-        `, [name, parseFloat(price), req.params.id]);
+            SET name = $1, price = $2, description = $3, estimated_time_minutes = $4
+            WHERE id = $5
+        `, [name, parseFloat(price), description, parseInt(estimated_time_minutes, 10), req.params.id]);
         res.json({ message: 'Данные услуги обновлены' });
     } catch (error) {
         res.status(500).json({ error: error.message });

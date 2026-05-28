@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
 const ServiceCatalogModal = ({ isOpen, onClose, onRefresh, serviceToEdit }) => {
-  const [formData, setFormData] = useState({ name: '', price: '' });
+  const [formData, setFormData] = useState({ name: '', price: '', description: '', estimated_time_minutes: '' });
 
   useEffect(() => {
     if (isOpen) {
       if (serviceToEdit) {
-        setFormData({ name: serviceToEdit.name || '', price: serviceToEdit.price || '' });
+        setFormData({ 
+          name: serviceToEdit.name || '', 
+          price: serviceToEdit.price || '',
+          description: serviceToEdit.description || '',
+          estimated_time_minutes: serviceToEdit.estimated_time_minutes || ''
+        });
       } else {
-        setFormData({ name: '', price: '' });
+        setFormData({ name: '', price: '', description: '', estimated_time_minutes: '' });
       }
     }
   }, [isOpen, serviceToEdit]);
@@ -44,8 +49,14 @@ const ServiceCatalogModal = ({ isOpen, onClose, onRefresh, serviceToEdit }) => {
       <div className="modal-content" style={{ background: '#fff', padding: '25px', borderRadius: '8px', width: '400px' }}>
         <h2>{serviceToEdit ? 'Редактировать услугу' : 'Добавить услугу в каталог'}</h2>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          
           <input type="text" placeholder="Наименование услуги" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ padding: '8px' }} />
-          <input type="number" placeholder="Базовая стоимость (руб.)" min="0" step="0.01" required value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} style={{ padding: '8px' }} />
+          
+          <textarea placeholder="Подробное описание услуги" rows="3" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} style={{ padding: '8px', resize: 'vertical' }} />
+          
+          <input type="number" placeholder="Примерное время выполнения (в минутах)" min="1" required value={formData.estimated_time_minutes} onChange={(e) => setFormData({...formData, estimated_time_minutes: e.target.value})} style={{ padding: '8px' }} />
+          
+          <input type="number" placeholder="Базовая стоимость (руб.)" min="0" step="50" required value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} style={{ padding: '8px' }} />
           
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
             <button type="button" onClick={onClose} className="btn-secondary">Отмена</button>
