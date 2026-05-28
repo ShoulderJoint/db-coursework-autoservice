@@ -6,9 +6,17 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/public', async (req, res) => {
     const { name, surname, phone, email, brand, model, comment, service_name } = req.body;
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Некорректный формат email' });
+    }
+    const phoneRegex = /^\+7\d{10}$/;
+    if (!phone || !phoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Некорректный формат телефона' });
+    }
+
     try {
         await db.tx(async t => {
-            // 1. Ищем клиента по телефону
             let client = await t.oneOrNone('SELECT id FROM clients WHERE phone = $1', [phone]);
             
             if (!client) {

@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../../api';
 
 const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^\+7\d{10}$/;
+
   const [formData, setFormData] = useState({
     surname: '', name: '', patronymic: '', phone: '', email: ''
   });
@@ -22,6 +26,15 @@ const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!emailRegex.test(formData.email)) {
+      alert("Некорректный формат email");
+      return; 
+    }
+    if (!phoneRegex.test(formData.phone)) {
+      alert("Некорректный формат телефона. Используйте формат +7XXXXXXXXXX");
+      return; 
+    }
     
     const endpoint = clientToEdit ? `/clients/${clientToEdit.id}` : '/clients';
     const method = clientToEdit ? 'PUT' : 'POST';
@@ -51,7 +64,7 @@ const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
       <div className="modal-content" style={{ background: '#fff', padding: '20px', borderRadius: '8px', width: '400px' }}>
         <h2>{clientToEdit ? 'Редактировать клиента' : 'Новый клиент'}</h2>
         
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <input 
             type="text" placeholder="Фамилия" required
             value={formData.surname} onChange={(e) => setFormData({...formData, surname: e.target.value})} 
@@ -69,7 +82,7 @@ const ClientModal = ({ isOpen, onClose, clientToEdit, onRefresh }) => {
             value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} 
           />
           <input 
-            type="text" placeholder="Почта (alex99@example.ru)" required
+            type="email" placeholder="Почта (alex99@example.ru)" required
             value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} 
           />
 

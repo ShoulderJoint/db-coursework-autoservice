@@ -54,7 +54,18 @@ router.get('/', async (req, res) => {
     }
 });
 router.post('/', async (req, res) => {
+
     const { surname, name, patronymic, phone, email } = req.body;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Некорректный формат email' });
+    }
+    const phoneRegex = /^\+7\d{10}$/;
+    if (!phone || !phoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Некорректный формат телефона' });
+    }
+
     try {
         const login = await generateUniqueLogin(db, name, patronymic, surname);
 
@@ -84,6 +95,15 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { surname, name, patronymic, phone, email } = req.body;
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Некорректный формат email' });
+    }
+    const phoneRegex = /^\+7\d{10}$/;
+    if (!phone || !phoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Некорректный формат телефона' });
+    }
 
     try {
         await db.none(

@@ -1,7 +1,7 @@
 const { Builder, By, until } = require('selenium-webdriver');
 
 async function runAddClientTest() {
-    let driver = await new Builder().forBrowser('chrome').build();
+    let driver = await new Builder().forBrowser('MicrosoftEdge').build();
 
     try {
         await driver.get('http://localhost:5173');
@@ -27,17 +27,39 @@ async function runAddClientTest() {
         await driver.findElement(By.xpath("//input[@placeholder='Фамилия']")).sendKeys('Автоматизаторов');
         await driver.findElement(By.xpath("//input[@placeholder='Имя']")).sendKeys('Селен');
         await driver.findElement(By.xpath("//input[@placeholder='Отчество']")).sendKeys('Едваешевич');
-        await driver.findElement(By.xpath("//input[@placeholder='Телефон (+7...)']")).sendKeys('+79998887766');
+        await driver.findElement(By.xpath("//input[@placeholder='Телефон (+7...)']")).sendKeys('хихихи');
+        //await driver.findElement(By.xpath("//input[@placeholder='Телефон (+7...)']")).sendKeys('+79998887766');
+        //await driver.findElement(By.xpath("//input[@placeholder='Почта (alex99@example.ru)']")).sendKeys('хихихихихи');
         await driver.findElement(By.xpath("//input[@placeholder='Почта (alex99@example.ru)']")).sendKeys('selenium@test.com');
 
         await driver.findElement(By.xpath("//button[contains(text(), 'Сохранить')]")).click();
 
-        await driver.wait(async () => {
-            const modals = await driver.findElements(By.css('.modal'));
-            return modals.length === 0;
-        }, 5000);
+       await driver.wait(until.alertIsPresent(), 5000);
+        
+        let alert = await driver.switchTo().alert();
+        
+        let alertText = await alert.getText();
+        if (alertText.includes('Некорректный формат телефона')) {
+            console.log('Ожидаемая ошибка валидации получена успешно.');
+        } else {
+            throw new Error('Получен неожиданный текст алерта: ' + alertText);
+        } 
 
-        console.log('Тест-кейс №1 пройден успешно: Клиент добавлен, модальное окно закрылось.');
+        await alert.accept();
+
+        const modals = await driver.findElements(By.css('.modal'));
+        if (modals.length === 0) {
+            throw new Error("Модальное окно закрылось, хотя форма содержала ошибки!");
+        }
+
+        // await driver.wait(async () => {
+        //     const modals = await driver.findElements(By.css('.modal'));
+        //     return modals.length === 0;
+        // }, 5000);
+
+        //console.log('Тест-кейс №1 пройден успешно: Клиент добавлен, модальное окно закрылось.');
+        
+        console.log('Тест-кейс пройден: форма не отправлена, получена ошибка телефона');
 
     } catch (error) {
         console.error('Ошибка во время выполнения теста:', error);

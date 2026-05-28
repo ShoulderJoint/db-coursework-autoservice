@@ -30,16 +30,27 @@ const ProfileModal = ({ isOpen, onClose, currentUser, clientData, onProfileUpdat
         e.preventDefault();
         setError('');
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            setError("Некорректный формат email");
+            return; 
+        }
+
+        const phoneRegex = /^\+7\d{10}$/;
+        if (!phoneRegex.test(formData.phone)) {
+            setError("Некорректный формат телефона. Используйте формат +7XXXXXXXXXX");
+            return;
+        }
+
         try {
-            // Отправляем PUT запрос на обновление данных
             const res = await apiFetch(`/clients/${currentUser.id}`, {
                 method: 'PUT',
                 body: JSON.stringify(formData)
             });
 
             if (res.ok) {
-                onProfileUpdate(formData); // Обновляем имя в интерфейсе
-                onClose(); // Закрываем окно
+                onProfileUpdate(formData);
+                onClose();
             } else {
                 const err = await res.json();
                 setError(err.error || 'Ошибка при сохранении данных');
