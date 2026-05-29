@@ -2,9 +2,13 @@ import React, { useState } from 'react';
 import stoPic from '../../assets/sto_pic.jpeg';
 
 const LandingPage = ({ onLoginClick, services, stations }) => {
+
   const [view, setView] = useState('home');
   const [selectedService, setSelectedService] = useState(null);
+
   const [selectedStation, setSelectedStation] = useState(null);
+
+  const [isConsentGiven, setIsConsentGiven] = useState(false);
 
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [requestData, setRequestData] = useState({
@@ -59,6 +63,7 @@ const LandingPage = ({ onLoginClick, services, stations }) => {
         alert('Заявка успешно отправлена! Ожидайте звонка администратора.');
         setIsRequestModalOpen(false);
         setRequestData({ name: '', surname: '', phone: '', email: '', brand: '', model: '', comment: '' });
+        setIsConsentGiven(false);
       } else {
         alert('Ошибка при отправке заявки');
       }
@@ -78,7 +83,7 @@ const LandingPage = ({ onLoginClick, services, stations }) => {
         {selectedStation && stations && (
           <p style={{ color: '#64748b', marginBottom: '15px' }}>
             Филиал: <strong>г. {stations.find(s => s.id === selectedStation)?.city}, ул. {stations.find(s => s.id === selectedStation)?.street},
-               {stations.find(s => s.id === selectedStation)?.house}</strong>
+              {stations.find(s => s.id === selectedStation)?.house}</strong>
           </p>
         )}
         {!selectedStation && (
@@ -112,9 +117,33 @@ const LandingPage = ({ onLoginClick, services, stations }) => {
           <textarea placeholder="Опишите проблему или пожелания" rows="3" style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
             value={requestData.comment} onChange={e => setRequestData({ ...requestData, comment: e.target.value })} />
 
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginTop: '10px', marginBottom: '10px' }}>
+            <input
+              type="checkbox"
+              id="consent"
+              required
+              checked={isConsentGiven}
+              onChange={(e) => setIsConsentGiven(e.target.checked)}
+              style={{ marginTop: '4px', cursor: 'pointer' }}
+            />
+            <label htmlFor="consent" style={{ fontSize: '13px', color: '#64748b', cursor: 'pointer', lineHeight: '1.4' }}>
+              Даю согласие на обработку моих персональных данных
+            </label>
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
             <button type="button" onClick={() => setIsRequestModalOpen(false)} className="btn-secondary">Отмена</button>
-            <button type="submit" className="btn-primary">Отправить</button>
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={!isConsentGiven}
+              style={{
+                opacity: isConsentGiven ? 1 : 0.5,
+                cursor: isConsentGiven ? 'pointer' : 'not-allowed'
+              }}
+            >
+              Отправить
+            </button>
           </div>
         </form>
       </div>
@@ -141,14 +170,14 @@ const LandingPage = ({ onLoginClick, services, stations }) => {
           }}>
             {stations && stations.length > 0 ? (
               stations.map((st) => (
-                <div 
-                  key={st.id} 
+                <div
+                  key={st.id}
                   onClick={() => {
                     setSelectedStation(st.id);
                     setIsContactsOpen(false); // Закрываем список после выбора
                   }}
-                  style={{ 
-                    padding: '12px 16px', 
+                  style={{
+                    padding: '12px 16px',
                     borderBottom: '1px solid #f1f5f9',
                     cursor: 'pointer',
                     backgroundColor: selectedStation === st.id ? '#e2e8f0' : '#fff', // Подсветка выбранного
