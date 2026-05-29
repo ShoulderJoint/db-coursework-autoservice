@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import stoPic from '../../assets/sto_pic.jpeg';
 
-const LandingPage = ({ onLoginClick, services, stations }) => { // Добавили stations в пропсы
+const LandingPage = ({ onLoginClick, services, stations }) => {
   const [view, setView] = useState('home');
   const [selectedService, setSelectedService] = useState(null);
+  const [selectedStation, setSelectedStation] = useState(null);
 
-  // Стейты для заявки с сайта
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [requestData, setRequestData] = useState({
     name: '',
@@ -17,7 +17,6 @@ const LandingPage = ({ onLoginClick, services, stations }) => { // Добави�
     comment: ''
   });
 
-  // Стейт для выпадающего меню филиалов
   const [isContactsOpen, setIsContactsOpen] = useState(false);
 
   const scrollToSection = (id) => {
@@ -39,13 +38,20 @@ const LandingPage = ({ onLoginClick, services, stations }) => { // Добави�
 
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
+
+    if (!selectedStation) {
+      alert('Пожалуйста, выберите филиал в шапке сайта перед отправкой заявки.');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:3000/applications/public', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...requestData,
-          service_name: selectedService ? selectedService.name : null
+          service_name: selectedService ? selectedService.name : null,
+          station_id: selectedStation
         })
       });
 
@@ -68,6 +74,17 @@ const LandingPage = ({ onLoginClick, services, stations }) => { // Добави�
         <h2 style={{ marginTop: 0 }}>Оставить заявку</h2>
         {selectedService && (
           <p style={{ color: '#64748b', marginBottom: '15px' }}>Услуга: <strong>{selectedService.name}</strong></p>
+        )}
+        {selectedStation && stations && (
+          <p style={{ color: '#64748b', marginBottom: '15px' }}>
+            Филиал: <strong>г. {stations.find(s => s.id === selectedStation)?.city}, ул. {stations.find(s => s.id === selectedStation)?.street},
+               {stations.find(s => s.id === selectedStation)?.house}</strong>
+          </p>
+        )}
+        {!selectedStation && (
+          <p style={{ color: '#ef4444', marginBottom: '15px', fontSize: '14px' }}>
+            * Необходимо выбрать филиал в шапке сайта.
+          </p>
         )}
         <form onSubmit={handleRequestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
@@ -104,11 +121,9 @@ const LandingPage = ({ onLoginClick, services, stations }) => { // Добави�
     </div>
   );
 
-  // Компонент кнопок в шапке (чтобы не дублировать код 3 раза)
   const HeaderActions = () => (
     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
 
-      {/* Выпадающий список контактов */}
       <div style={{ position: 'relative' }}>
         <button
           onClick={() => setIsContactsOpen(!isContactsOpen)}
@@ -126,7 +141,22 @@ const LandingPage = ({ onLoginClick, services, stations }) => { // Добави�
           }}>
             {stations && stations.length > 0 ? (
               stations.map((st) => (
-                <div key={st.id} style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
+                <div 
+                  key={st.id} 
+                  onClick={() => {
+                    setSelectedStation(st.id);
+                    setIsContactsOpen(false); // Закрываем список после выбора
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    borderBottom: '1px solid #f1f5f9',
+                    cursor: 'pointer',
+                    backgroundColor: selectedStation === st.id ? '#e2e8f0' : '#fff', // Подсветка выбранного
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = selectedStation === st.id ? '#e2e8f0' : '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = selectedStation === st.id ? '#e2e8f0' : '#fff'}
+                >
                   <div style={{ fontWeight: '600', color: '#0f172a', marginBottom: '4px' }}>
                     г. {st.city}, ул. {st.street}, д. {st.house}
                   </div>

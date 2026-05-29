@@ -4,7 +4,11 @@ const db = require('../db');
 const authMiddleware = require('../middleware/authMiddleware');
 
 router.post('/public', async (req, res) => {
-    const { name, surname, phone, email, brand, model, comment, service_name } = req.body;
+    const { name, surname, phone, email, brand, model, comment, service_name, station_id } = req.body;
+
+    if (!station_id) {
+        return res.status(400).json({ error: 'Не указан филиал для заявки' });
+    }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
@@ -26,13 +30,11 @@ router.post('/public', async (req, res) => {
                 `, [name, surname, phone, email]);
             }
 
-            // 2. Ищем машину этого клиента
             let car = await t.oneOrNone(`
                 SELECT id FROM cars 
                 WHERE client_id = $1 AND brand ILIKE $2 AND model ILIKE $3
             `, [client.id, brand, model]);
 
-            // Если машины нет — добавляем, передавая null вместо заглушек
             if (!car) {
                 car = await t.one(`
                     INSERT INTO cars (client_id, brand, model, reg_number, vin) 
@@ -40,16 +42,22 @@ router.post('/public', async (req, res) => {
                 `, [client.id, brand, model, null, null]);
             }
 
-            // 3. Формируем текст заявки без приписки
+            const admin = await t.oneOrNone(`
+                SELECT id FROM staff 
+                WHERE station_id = $1 AND role_id = 2 
+                LIMIT 1
+            `, [station_id]);
+
+            const assignedStaffId = admin ? admin.id : null;
+
             const fullDescription = service_name 
                 ? `Услуга: ${service_name}. ${comment}`.trim() 
                 : comment;
 
-            // Создаем заявку
             await t.none(`
                 INSERT INTO applications (car_id, staff_id, description, created_at)
                 VALUES ($1, $2, $3, NOW())
-            `, [car.id, null, fullDescription]);
+            `, [car.id, assignedStaffId, fullDescription]);
         });
 
         res.status(201).json({ message: 'Заявка принята' });

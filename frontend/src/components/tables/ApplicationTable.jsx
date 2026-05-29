@@ -23,6 +23,7 @@ const ApplicationTable = ({ applications, onEdit, userRole }) => {
           <th>Администратор</th>
           <th>Описание</th>
           <th>Дата создания</th>
+          <th>Дата внесения изменений</th>
           {canEdit && <th>Действия</th>}
         </tr>
       </thead>
@@ -34,6 +35,7 @@ const ApplicationTable = ({ applications, onEdit, userRole }) => {
             <td>{`${app.staff_surname || ''} ${app.staff_name || ''}`.trim()}</td>
             <td>{app.description}</td>
             <td>{formatDate(app.created_at)}</td>
+            <td>{formatDate(app.updated_at)}</td>
             <td>
               {canEdit && (
                 <td>
