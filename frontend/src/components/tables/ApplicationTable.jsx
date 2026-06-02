@@ -22,6 +22,7 @@ const ApplicationTable = ({ applications, onEdit, userRole }) => {
           <th>Автомобиль</th>
           <th>Администратор</th>
           <th>Описание</th>
+          <th>Запланировано на</th>
           <th>Дата создания</th>
           <th>Дата внесения изменений</th>
           {canEdit && <th>Действия</th>}
@@ -34,6 +35,9 @@ const ApplicationTable = ({ applications, onEdit, userRole }) => {
             <td>{app.brand} {app.model} {app.reg_number ? `(${app.reg_number})` : ''}</td>
             <td>{`${app.staff_surname || ''} ${app.staff_name || ''}`.trim()}</td>
             <td>{app.description}</td>
+            <td style={{ fontWeight: app.scheduled_at ? 'bold' : 'normal', color: app.scheduled_at ? '#2563eb' : 'inherit' }}>
+              {formatDate(app.scheduled_at)}
+            </td>
             <td>{formatDate(app.created_at)}</td>
             <td>{formatDate(app.updated_at)}</td>
             {canEdit && (

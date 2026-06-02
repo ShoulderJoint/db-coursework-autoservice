@@ -1,20 +1,29 @@
 import React, { useState, useEffect } from 'react';
 
+const formatForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    //сдвиг времени на offset часового пояса, чтобы .toISOString() вернул локальное время
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+};
+
 const ApplicationModal = ({ isOpen, onClose, applicationToEdit, onRefresh, cars, staff }) => {
     const [formData, setFormData] = useState({
-        carId: '', staffId: '', description: ''
+        carId: '', staffId: '', description: '', scheduledAt: ''
     });
 
     useEffect(() => {
         if (applicationToEdit) {
             setFormData({
-                // Приводим к строке, чтобы React мог сопоставить значение с value у <option>
+                //приведение к строке, чтобы react мог сопоставить значение с value у <option>
                 carId: applicationToEdit.car_id ? String(applicationToEdit.car_id) : '',
                 staffId: applicationToEdit.staff_id ? String(applicationToEdit.staff_id) : '',
-                description: applicationToEdit.description || ''
+                description: applicationToEdit.description || '',
+                scheduledAt: formatForInput(applicationToEdit.scheduled_at)
             });
         } else {
-            setFormData({ carId: '', staffId: '', description: '' });
+            setFormData({ carId: '', staffId: '', description: '', scheduledAt: '' });
         }
     }, [applicationToEdit, isOpen]);
 
@@ -86,6 +95,16 @@ const ApplicationModal = ({ isOpen, onClose, applicationToEdit, onRefresh, cars,
                             ))
                         }
                     </select>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                        <label style={{ fontSize: '14px', color: '#4b5563' }}>Дата и время записи (необязательно):</label>
+                        <input 
+                            type="datetime-local" 
+                            value={formData.scheduledAt}
+                            onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
+                            style={{ padding: '8px', fontFamily: 'inherit' }}
+                        />
+                    </div>
 
                     <textarea
                         placeholder="Описание проблемы со слов клиента"

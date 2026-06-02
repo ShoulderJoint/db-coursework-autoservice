@@ -26,6 +26,12 @@ const ApplicationInfoModal = ({ isOpen, onClose, application }) => {
             </p>
           </div>
           <div>
+            <strong>Запланировано на:</strong>
+            <p style={{ margin: '4px 0 0 0', fontWeight: application.scheduled_at ? 'bold' : 'normal', color: application.scheduled_at ? '#2563eb' : 'inherit' }}>
+              {application.scheduled_at ? new Date(application.scheduled_at).toLocaleString('ru-RU') : 'Не назначено'}
+            </p>
+          </div>
+          <div>
             <strong>Дата создания:</strong>
             <p style={{ margin: '4px 0 0 0' }}>{new Date(application.created_at).toLocaleString('ru-RU')}</p>
           </div>
