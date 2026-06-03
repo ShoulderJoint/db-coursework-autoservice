@@ -13,7 +13,6 @@ const VendorsTable = ({ vendors, onEdit, userRole }) => {
                 <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
                     <th>Название</th>
                     <th>ИНН</th>
-                    <th>Регион</th>
                     <th>Город</th>
                     <th>Улица</th>
                     <th>Дом</th>
@@ -29,7 +28,6 @@ const VendorsTable = ({ vendors, onEdit, userRole }) => {
                     <tr key={v.id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                         <td>{v.name}</td>
                         <td>{v.inn}</td>
-                        <td>{v.region}</td>
                         <td>{v.city}</td>
                         <td>{v.street}</td>
                         <td>{v.house}</td>

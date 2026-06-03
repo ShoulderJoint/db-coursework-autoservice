@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 
 const VendorModal = ({ isOpen, onClose, vendorToEdit, onRefresh }) => {
   const [formData, setFormData] = useState({
-    name: '', region: '', city: '', street: '', house: '', flat: '', postcode: '', inn: '', phone: ''
+    name: '', city: '', street: '', house: '', flat: '', postcode: '', inn: '', phone: ''
   });
 
   useEffect(() => {
     if (vendorToEdit) {
       setFormData({
         name: vendorToEdit.name || '',
-        region: vendorToEdit.region || '',
         city: vendorToEdit.city || '',
         street: vendorToEdit.street || '',
         house: vendorToEdit.house || '',
@@ -20,7 +19,7 @@ const VendorModal = ({ isOpen, onClose, vendorToEdit, onRefresh }) => {
       });
     } else {
       setFormData({
-        name: '', region: '', city: '', street: '', house: '', flat: '', postcode: '', inn: '', phone: ''
+        name: '', city: '', street: '', house: '', flat: '', postcode: '', inn: '', phone: ''
       });
     }
   }, [vendorToEdit, isOpen]);
@@ -67,7 +66,6 @@ const VendorModal = ({ isOpen, onClose, vendorToEdit, onRefresh }) => {
           
           <h4 style={{ margin: '10px 0 0 0' }}>Юридический адрес</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <input type="text" placeholder="Регион" required value={formData.region} onChange={(e) => setFormData({...formData, region: e.target.value})} />
             <input type="text" placeholder="Город" required value={formData.city} onChange={(e) => setFormData({...formData, city: e.target.value})} />
             <input type="text" placeholder="Улица" required value={formData.street} onChange={(e) => setFormData({...formData, street: e.target.value})} />
             <input type="text" placeholder="Дом" required value={formData.house} onChange={(e) => setFormData({...formData, house: e.target.value})} />
